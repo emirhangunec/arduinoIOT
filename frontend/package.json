@@ -10,13 +10,25 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@formkit/auto-animate": "^0.8.2",
     "@nuxt/eslint": "^0.4.0",
-    "@nuxtjs/tailwindcss": "^6.12.1",
+    "@vee-validate/zod": "^4.13.2",
+    "@vueuse/core": "^10.11.0",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
+    "lucide-vue-next": "^0.424.0",
     "nuxt": "^3.12.4",
     "pinia": "^2.2.0",
-    "vue": "latest"
+    "radix-vue": "^1.9.2",
+    "shadcn-nuxt": "^0.10.4",
+    "tailwind-merge": "^2.4.0",
+    "tailwindcss-animate": "^1.0.7",
+    "vee-validate": "^4.13.2",
+    "vue": "latest",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@nuxtjs/tailwindcss": "^6.12.1",
     "@pinia/nuxt": "^0.5.2"
   },
   "overrides": {

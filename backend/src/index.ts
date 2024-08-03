@@ -20,7 +20,7 @@ server.on('upgrade', (request, socket, head) => {
     }
 });
 
-const PORT = process.env.BACKEND_PORT ?? 3000;
+const PORT = process.env.BACKEND_PORT ?? 3001;
 server.listen(PORT, () => {
     console.log(`Sunucu http://localhost:${PORT} adresinde çalışıyor.`);
 });

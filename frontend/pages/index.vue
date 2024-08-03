@@ -2,5 +2,7 @@
 
 </script>
 <template>
-  asd
+
+
+  <NuxtLink to="/setup"> go to setup</NuxtLink>
 </template>
