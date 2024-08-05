@@ -1,9 +1,11 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+
+</script>
 <template>
   <NuxtLayout>
-    <NuxtLoadingIndicator />
+    <NuxtLoadingIndicator/>
     <NuxtPage />
   </NuxtLayout>
 
-  <Toaster />
+  <Toaster/>
 </template>

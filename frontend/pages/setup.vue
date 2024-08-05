@@ -7,8 +7,11 @@ import {vAutoAnimate} from '@formkit/auto-animate/vue'
 import {Button} from '@/components/ui/button'
 import {FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage,} from '@/components/ui/form'
 import {Input} from '@/components/ui/input'
-import {toast} from "~/components/ui/toast";
+import type {Company, User} from "PrismaTypes";
 
+
+const {$api} = useNuxtApp()
+const companyStore = useCompanyStore()
 const formSchema = toTypedSchema(z.object({
   companyName: z.string().min(2).max(50),
   email: z.string().email(),
@@ -20,27 +23,22 @@ const {isFieldDirty, handleSubmit} = useForm({
   validationSchema: formSchema,
 })
 
-const onSubmit = handleSubmit(async(values) => {
-  try{
-    const response = await $fetch('http://localhost:3001/company', {
-      method: 'POST',
-      body: values,
-    })
-    localStorage.setItem('companyData', JSON.stringify(response))
-    toast({
-      variant:'default',
-      title: 'Form submitted successfully',
-    })
-    navigateTo('/')
+const onSubmit = handleSubmit(async (values) => {
+  const res = await $api<{
+    message: string,
+    data: {
+      company: Company,
+      user: Omit<User, 'password'>
+    } | undefined
+  }>('/setup', {
+    method: 'POST',
+    body: values
 
-  }
-  catch (e) {
-    toast({
-      variant:'destructive',
-      title: 'An error occurred while submitting the form',
-    })
-  }
+  })
 
+  if (res.data) {
+    navigateTo('/?message=success-setup', {external: true})
+  }
 })
 
 </script>
