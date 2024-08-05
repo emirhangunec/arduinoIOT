@@ -1,5 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+
 export default defineNuxtConfig({
+    ssr: false,
     runtimeConfig: {
         public: {
             backendUrl: process.env.BACKEND_URL,
@@ -7,8 +9,8 @@ export default defineNuxtConfig({
             iotWebsocketUrl: process.env.IOT_WEBSOCKET_URL
         }
     },
-    alias:{
-        'PrismaTypes':'../backend/prisma/prisma.ts',
+    alias: {
+        'PrismaTypes': '../backend/prisma/prisma.ts',
     },
     compatibilityDate: '2024-04-03',
     devtools: {enabled: true},
@@ -18,6 +20,11 @@ export default defineNuxtConfig({
             tailwindcss: {},
             autoprefixer: {},
         },
+    },
+    vite:{
+        optimizeDeps: {
+            exclude: ['jwt-decode']
+        }
     },
     shadcn: {
         /**

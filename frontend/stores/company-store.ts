@@ -29,17 +29,17 @@ export const useCompanyStore = defineStore('company', () => {
             }
             if (isValidCompany(res.data.company)) {
                 localStorage.setItem('companyData', JSON.stringify(res.data.company))
-                console.log('companyData fetched from server', res.data.company)
+                // console.log('companyData fetched from server', res.data.company)
                 isLoading.value = false
                 return res.data.company
 
             } else {
-                console.error('Invalid company data from server', res.data.company)
+                // console.error('Invalid company data from server', res.data.company)
                 isLoading.value = false
                 return null
             }
         } catch (e) {
-            console.error('Invalid company data from server')
+            // console.error('Invalid company data from server')
             isLoading.value = false
             return null
 
@@ -56,7 +56,7 @@ export const useCompanyStore = defineStore('company', () => {
             if (rawData) {
                 const parsedData = JSON.parse(rawData)
                 if (isValidCompany(parsedData)) {
-                    console.log('company data found on localstorage', parsedData)
+                    // console.log('company data found on localstorage', parsedData)
                     setTimeout(() => {
                         companyData.value = parsedData
                     }, 0)

@@ -1,7 +1,8 @@
 import express from 'express';
 import db from "../prisma/prisma";
 import cors from 'cors';
-import {hashPassword} from "./bcrypt";
+import {comparePassword, hashPassword} from "./bcrypt";
+import jwt from 'jsonwebtoken';
 
 const app = express();
 
@@ -69,14 +70,49 @@ app.post('/setup', async (req, res) => {
     }
 
     const {password: _, ...userWithoutPassword} = user;
+    const token = jwt.sign({user: userWithoutPassword}, 'mostsecuresecret');
 
     res.json({
         message: 'setup completed return to login page to login with superadmin credentials', data: {
-            user: userWithoutPassword,
-            company
+            company,
+            token
         }
     });
 
+})
+
+app.post('/login', async (req, res) => {
+    const {email, password} = req.body;
+    if (!email || !password) {
+        return res.status(400).json({message: 'email and password are required'});
+    }
+    const user = await db.user.findUnique({where: {email}});
+    if (!user) {
+        return res.status(404).json({message: 'user not found'});
+    }
+    const isPasswordValid = await comparePassword(password, user.password);
+    if (!isPasswordValid) {
+        return res.status(401).json({message: 'invalid credentials'});
+    }
+    const {password: _, ...userWithoutPassword} = user;
+    const token = jwt.sign({user: userWithoutPassword}, 'mostsecuresecret');
+    res.json({message: 'login successful', data: {token}});
+})
+
+app.get('/protected', async (req, res) => {
+
+    const token = req.headers.authorization;
+    if (!token) {
+        return res.status(401).json({message: 'token is required'});
+    }
+    try {
+        const [bearer, jwtToken] = token.split(' ');
+        const decoded = jwt.verify(jwtToken, 'mostsecuresecret');
+        res.json({message: 'protected route', data: {decoded}});
+    } catch (e) {
+        console.log(e);
+        return res.status(401).json({message: 'invalid token'});
+    }
 })
 
 

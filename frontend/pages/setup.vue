@@ -7,11 +7,12 @@ import {vAutoAnimate} from '@formkit/auto-animate/vue'
 import {Button} from '@/components/ui/button'
 import {FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage,} from '@/components/ui/form'
 import {Input} from '@/components/ui/input'
-import type {Company, User} from "PrismaTypes";
+import type {Company} from "PrismaTypes";
 
 
 const {$api} = useNuxtApp()
-const companyStore = useCompanyStore()
+const authStore = useAuthStore()
+
 const formSchema = toTypedSchema(z.object({
   companyName: z.string().min(2).max(50),
   email: z.string().email(),
@@ -28,7 +29,7 @@ const onSubmit = handleSubmit(async (values) => {
     message: string,
     data: {
       company: Company,
-      user: Omit<User, 'password'>
+      token: string
     } | undefined
   }>('/setup', {
     method: 'POST',
@@ -37,6 +38,7 @@ const onSubmit = handleSubmit(async (values) => {
   })
 
   if (res.data) {
+    authStore.login(res.data.token)
     navigateTo('/?message=success-setup', {external: true})
   }
 })
