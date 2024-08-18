@@ -11,7 +11,6 @@ interface IotWebSocket extends WebSocket {
 }
 
 wss.on("connection", (ws: IotWebSocket, request) => {
-  console.log(request.socket.remoteAddress);
   ws.ip = request.socket.remoteAddress;
   ws.on("message", async function message(data, isBinary) {
     const parsedData = data.toString();
@@ -87,6 +86,10 @@ setInterval(() => {
     const isHeatingOpen = Math.random() > 0.5;
 
     client.send(
+      `relay:${isRelayOpen ? 1 : 0},heating:${isHeatingOpen ? 1 : 0}`
+    );
+    console.log(
+      "sended: ",
       `relay:${isRelayOpen ? 1 : 0},heating:${isHeatingOpen ? 1 : 0}`
     );
   });
