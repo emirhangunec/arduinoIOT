@@ -7,6 +7,7 @@ interface IotWebSocket extends WebSocket {
   id: string | undefined;
   lastPing: number | undefined;
   ip: string | undefined;
+  window: boolean | undefined;
 }
 
 wss.on("connection", (ws: IotWebSocket, request) => {
@@ -14,29 +15,38 @@ wss.on("connection", (ws: IotWebSocket, request) => {
   ws.ip = request.socket.remoteAddress;
   ws.on("message", async function message(data, isBinary) {
     const parsedData = data.toString();
-    if (parsedData.includes("id:")) {
-      ws.id = parsedData.split("id:")[1].trim();
-      if (ws.ip === undefined) return;
-      const res = await prisma.device.upsert({
-        where: {
-          id: ws.id,
-        },
-        update: {
-          isOnline: true,
-          ip: ws.ip,
-        },
-        create: {
-          id: ws.id,
-          ip: ws.ip,
-          isOnline: true,
-        },
-      });
-      console.log("res", res);
+    const [key, value] = parsedData.split(":");
+    switch (key) {
+      case "id":
+        ws.id = value;
+        if (ws.ip === undefined) return;
+        const res = await prisma.device.upsert({
+          where: {
+            id: ws.id,
+          },
+          update: {
+            isOnline: true,
+            ip: ws.ip,
+          },
+          create: {
+            id: ws.id,
+            ip: ws.ip,
+            isOnline: true,
+          },
+        });
+        console.log("res", res);
+        break;
+      case "ping":
+        ws.lastPing = Date.now();
+        break;
+
+      case "window":
+        ws.window = parseInt(value) === 1;
+        break;
+      default:
+        console.log(`user sended:${parsedData}`);
+        break;
     }
-    if (parsedData === "ping") {
-      ws.lastPing = Date.now();
-    }
-    console.log(`user sended:${parsedData}`);
   });
   ws.on("close", async () => {
     if (ws.id === undefined || ws.ip === undefined) return;
@@ -60,16 +70,25 @@ setInterval(() => {
     if (client.lastPing === undefined) return;
     if (client.id === undefined) return;
 
-    console.log(
-      client.id,
-      new Date(client.lastPing).toLocaleString("tr"),
-      client.ip
-    );
-
-    if (client.lastPing < Date.now() - 10000) {
+    if (client.lastPing < Date.now() - 30000) {
       console.log("Client is not responding. Terminating connection.");
       client.terminate();
+      return;
     }
+
+    const data = {
+      id: client.id,
+      ip: client.ip,
+      lastPing: client.lastPing,
+      isWindowClosed: client.window,
+    };
+    console.log(data);
+    const isRelayOpen = Math.random() > 0.5;
+    const isHeatingOpen = Math.random() > 0.5;
+
+    client.send(
+      `relay:${isRelayOpen ? 1 : 0},heating:${isHeatingOpen ? 1 : 0}`
+    );
   });
 }, 5000);
 
