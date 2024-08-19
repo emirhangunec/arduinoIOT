@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {Users,School,UserPen,ChevronDown,LogOut,User,UserRound} from 'lucide-vue-next'
+import {Users,School,UserPen,ChevronDown,LogOut,User,UserRound, HouseIcon} from 'lucide-vue-next'
 
 import {
   DropdownMenu,
@@ -31,7 +31,7 @@ const shortenedName = computed(() => {
         </span>
       </div>
       <div class="bg-[#14293C]"><div class="flex items-center  p-4 border-b border-1-solid border-[#508C9B]">
-        <span class="text-lg font-bold text-white py-2">Genel Ayarlar</span>
+        <span class="text-lg font-bold text-white py-2 flex items-center justify-center gap-2"><HouseIcon/>Genel Ayarlar</span>
       </div>
         <div class="flex flex-col gap-4 py-2 text-[#EEEEEE] ">
          <div class="flex items-center gap-2 p-4"><Users class="text-gray-400"/><span class="text-md"><a href="/kullanicilar">Kullanıcılar</a></span></div>

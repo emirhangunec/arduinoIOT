@@ -4,5 +4,7 @@ definePageMeta({
 })
 </script>
 <template>
-<PButton>Merhaba</PButton>
+  <div class="w-full">
+    <Button icon="pi pi-home" />
+  </div>
 </template>

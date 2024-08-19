@@ -21,13 +21,8 @@ export default defineNuxtConfig({
                 preset: Aura
             }
         },
-        components: {
-            prefix: 'P'
-        },
-        directives: {
-            prefix: 'P'
-        }
-        },
+
+    },
     css: ['~/assets/css/main.css'],
     postcss: {
         plugins: {
@@ -35,7 +30,7 @@ export default defineNuxtConfig({
             autoprefixer: {},
         },
     },
-    vite:{
+    vite: {
         optimizeDeps: {
             exclude: ['jwt-decode']
         }
