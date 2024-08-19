@@ -58,7 +58,7 @@ const onSubmit = handleSubmit(async (values) => {
       />
     </div>
     <div class="bg-white w-full h-full flex flex-col gap-4 items-center justify-center">
-      <h1 class="text-3xl text-blue-950 font-bold py-8">Yonetici Kayit Ekrani</h1>
+      <h1 class="text-3xl text-blue-950 font-bold py-8">Yönetici Kayıt Ekranı</h1>
         <form @submit="onSubmit" class="flex flex-col gap-6">
           <FormField
               class="!w-full"
@@ -73,31 +73,31 @@ const onSubmit = handleSubmit(async (values) => {
                     type="text" placeholder="" v-bind="componentField"/>
               </FormControl>
               <FormDescription class="text-gray-400 text-xs">
-                *Sirketinizin ismini giriniz.
+                *Şirketinizin ismini giriniz.
               </FormDescription>
               <FormMessage/>
             </FormItem>
           </FormField>
           <FormField v-slot="{ componentField }" name="email" :validate-on-blur="!isFieldDirty">
             <FormItem v-auto-animate>
-              <FormLabel class="font-bold text-lg text-blue-950 flex gap-2 items-center"><Mail class="text-xs" />Yonetici emaili</FormLabel>
+              <FormLabel class="font-bold text-lg text-blue-950 flex gap-2 items-center"><Mail class="text-xs" />Yönetici emaili</FormLabel>
               <FormControl>
                 <Input type="text" placeholder="" v-bind="componentField"/>
               </FormControl>
               <FormDescription class="text-gray-400 text-xs">
-                *Yonetici emaili giriniz.
+                *Yönetici emaili giriniz.
               </FormDescription>
               <FormMessage/>
             </FormItem>
           </FormField>
           <FormField v-slot="{ componentField }" name="name" :validate-on-blur="!isFieldDirty">
             <FormItem v-auto-animate>
-              <FormLabel class="font-bold text-lg text-blue-950 flex gap-2 items-center"><User class="text-xs"/>Yonetici Isim soyisim</FormLabel>
+              <FormLabel class="font-bold text-lg text-blue-950 flex gap-2 items-center"><User class="text-xs"/>Yönetici Isim soyisim</FormLabel>
               <FormControl>
                 <Input type="text" placeholder="" v-bind="componentField"/>
               </FormControl>
               <FormDescription class="text-gray-400 text-xs">
-                *Yonetici isim soyisim giriniz.
+                *Yönetici isim soyisim giriniz.
               </FormDescription>
               <FormMessage/>
             </FormItem>
@@ -105,12 +105,12 @@ const onSubmit = handleSubmit(async (values) => {
 
           <FormField v-slot="{ componentField }" name="password" :validate-on-blur="!isFieldDirty">
             <FormItem v-auto-animate>
-              <FormLabel class="font-bold text-lg text-blue-950 flex gap-2 items-center"><LockKeyhole class="text-xs" />Yonetici sifresi</FormLabel>
+              <FormLabel class="font-bold text-lg text-blue-950 flex gap-2 items-center"><LockKeyhole class="text-xs" />Yönetici sifresi</FormLabel>
               <FormControl>
                 <Input type="password" placeholder="" v-bind="componentField"/>
               </FormControl>
               <FormDescription class="text-gray-400 text-xs">
-                *Yonetici sifresi giriniz.
+                *Yönetici şifresi giriniz.
               </FormDescription>
               <FormMessage/>
             </FormItem>
@@ -121,7 +121,7 @@ const onSubmit = handleSubmit(async (values) => {
                 class="flex items-center justify-center bg-blue-950"
                 type="submit"
             >
-              Kayit Ol
+              Kayıt Ol
             </Button>
           </div>
         </form>

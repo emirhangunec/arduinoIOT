@@ -65,7 +65,7 @@ const onSubmit = handleSubmit(async (values) => {
     </div>
     <div class="bg-white w-full h-full flex flex-col gap-4 items-center justify-center">
 
-      <h1 class="text-3xl text-blue-950 font-bold py-8">Yonetici Giris Ekrani</h1>
+      <h1 class="text-3xl text-blue-950 font-bold py-8">Giriş Ekranı</h1>
       <form
         class="flex flex-col gap-4"
         @submit="onSubmit"
@@ -78,18 +78,18 @@ const onSubmit = handleSubmit(async (values) => {
         >
           <FormItem v-auto-animate>
             <FormLabel class="font-bold text-lg text-blue-950 flex gap-2 items-center"
-            ><Mail class="text-xs"/>Yonetici emaili</FormLabel
+            ><Mail class="text-xs"/>Yönetici emaili</FormLabel
             >
             <FormControl class="w-full">
               <Input
                   type="text"
-                  placeholder="your email"
+                  placeholder="email "
                   v-bind="componentField"
                   class=" border-2 border-gray-300 rounded-md p-4 !w-[500px] "
               />
             </FormControl>
             <FormDescription class="text-gray-400 text-xs">
-              *Yonetici emaili ile giris yapabilirsiniz.
+              *Yönetici emaili ile giriş yapabilirsiniz.
             </FormDescription>
             <FormMessage />
           </FormItem>
@@ -104,18 +104,18 @@ const onSubmit = handleSubmit(async (values) => {
         >
           <FormItem v-auto-animate>
             <FormLabel class="font-bold text-lg text-blue-950 flex gap-2 items-center"
-            ><LockKeyhole class="text-xs"/>Yonetici sifresi</FormLabel
+            ><LockKeyhole class="text-xs"/>Yönetici şifresi</FormLabel
             >
             <FormControl>
               <Input
                   type="password"
-                  placeholder="your password"
+                  placeholder="şifre"
                   v-bind="componentField"
                   class="border-2 border-gray-300 rounded-md p-4"
               />
             </FormControl>
             <FormDescription class="text-gray-400 text-xs">
-              *Yonetici sifresi ile giris yapabilirsiniz.
+              *Yönetici şifresi ile giriş yapabilirsiniz.
             </FormDescription>
             <FormMessage />
           </FormItem>
