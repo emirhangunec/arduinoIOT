@@ -3,6 +3,7 @@ import db from "../prisma/prisma";
 import cors from 'cors';
 import {comparePassword, hashPassword} from "./bcrypt";
 import jwt from 'jsonwebtoken';
+import usersRouter from "./api/routers/users-router";
 
 const app = express();
 
@@ -99,21 +100,6 @@ app.post('/login', async (req, res) => {
     res.json({message: 'login successful', data: {token}});
 })
 
-app.get('/protected', async (req, res) => {
-
-    const token = req.headers.authorization;
-    if (!token) {
-        return res.status(401).json({message: 'token is required'});
-    }
-    try {
-        const [bearer, jwtToken] = token.split(' ');
-        const decoded = jwt.verify(jwtToken, 'mostsecuresecret');
-        res.json({message: 'protected route', data: {decoded}});
-    } catch (e) {
-        console.log(e);
-        return res.status(401).json({message: 'invalid token'});
-    }
-})
-
+app.use('/users', usersRouter);
 
 export default app;
