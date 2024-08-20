@@ -1,4 +1,5 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+import Aura from '@primevue/themes/aura';
 
 export default defineNuxtConfig({
     ssr: false,
@@ -14,6 +15,14 @@ export default defineNuxtConfig({
     },
     compatibilityDate: '2024-04-03',
     devtools: {enabled: true},
+    primevue: {
+        options: {
+            theme: {
+                preset: Aura
+            }
+        },
+
+    },
     css: ['~/assets/css/main.css'],
     postcss: {
         plugins: {
@@ -21,7 +30,7 @@ export default defineNuxtConfig({
             autoprefixer: {},
         },
     },
-    vite:{
+    vite: {
         optimizeDeps: {
             exclude: ['jwt-decode']
         }
@@ -37,5 +46,5 @@ export default defineNuxtConfig({
          */
         componentDir: './components/ui'
     },
-    modules: ["@nuxtjs/tailwindcss", "@nuxt/eslint", "@pinia/nuxt", "shadcn-nuxt"]
+    modules: ["@nuxtjs/tailwindcss", "@nuxt/eslint", "@pinia/nuxt", "shadcn-nuxt", "@primevue/nuxt-module"],
 })

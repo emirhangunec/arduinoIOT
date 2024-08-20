@@ -1,6 +1,10 @@
 <script setup lang="ts">
-import AdminLayout from "~/pages/AdminLayout.vue";
+definePageMeta({
+  layout: 'admin-layout',
+})
 </script>
 <template>
-<AdminLayout/>
+  <div class="w-full">
+    <Button icon="pi pi-home" />
+  </div>
 </template>
