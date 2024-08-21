@@ -1,6 +1,7 @@
 import express from "express";
 import db, {UserWithRoleAndPrivileges} from "../../../prisma/prisma";
 import authMiddleware from "../middlewares/auth-middleware";
+import {hashPassword} from "../../bcrypt";
 
 
 const router = express.Router();
@@ -64,11 +65,13 @@ router.post('/', async (req, res) => {
 
     if (existingUser) return res.status(422).json({message: 'user already exists'});
 
+    const hashedPassword = await hashPassword(password);
+
     const user = await db.user.create({
         data: {
             name,
             email,
-            password,
+            password: hashedPassword,
             role: {
                 connect: {
                     id: roleId

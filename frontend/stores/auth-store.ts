@@ -3,9 +3,6 @@ import {jwtDecode, type JwtPayload} from "jwt-decode";
 import type {UserWithRoleAndPrivileges} from "PrismaTypes";
 
 type PasswordlessUser = Omit<UserWithRoleAndPrivileges, 'password'>
-function isValidUser (user: PasswordlessUser): user is PasswordlessUser {
-    return !!user.id && !!user.email && !!user.name && !!user.isAdmin
-}
 
 interface UserJWT extends JwtPayload {
     user: PasswordlessUser
@@ -27,7 +24,7 @@ export const useAuthStore = defineStore('auth', () => {
     const user = computed(()=>{
         if (isLoggedIn.value){
             const decoded = jwtDecode<UserJWT>(token.value)
-            if (decoded.user && isValidUser(decoded.user)){
+            if (decoded.user ){
                 return decoded.user
             }
             else {

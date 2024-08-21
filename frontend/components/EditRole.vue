@@ -3,44 +3,53 @@ import type {Privilege, RoleWithPrivileges} from "PrismaTypes";
 
 const user = useAuthStore()
 const isOpen = defineModel('isOpen', {type: Boolean, default: false})
+interface EditRoleProps {
+  role?: RoleWithPrivileges
+}
+const props = defineProps<EditRoleProps>()
+const role = computed(() => props.role)
 
 const toast = useToast()
 const {$api} = useNuxtApp()
 
-const emit = defineEmits(['newRoleAdded'])
+const emit = defineEmits(['roleEdited'])
 watch(isOpen, async (val) => {
   if (val) {
-    const hasPermission = user.can(['role.create'])
+    const hasPermission = user.can(['role.update'])
     if (!hasPermission) {
       toast.add({
         severity: 'error',
         summary: 'Hata',
-        detail: 'Rol ekleyebilmek icin yetkiniz olmali, lutfen yonetici ile iletisime geciniz',
+        detail: 'Rol duzenleyebilmek icin yetkiniz olmali, lutfen yonetici ile iletisime geciniz',
         life: 10000
       })
       isOpen.value = false
     } else {
       const data = await $api<ApiResponse<Privilege[]>>('privileges')
       privileges.value = data.data || []
+      if (role.value) {
+        state.name = role.value.name
+        state.privileges = role.value.privileges.map(p => p.id)
+      }
     }
   }
 })
 
 const privileges = ref<Privilege[]>([])
 
-const data = reactive({
+const state = reactive({
   name: '',
-  privileges: []
+  privileges: [] as string[]
 })
 
-const canSubmit = computed(() => data.name.length > 0 && data.privileges.length > 0)
+const canSubmit = computed(() => state.name.length > 0 && state.privileges.length > 0 && role.value && role.value.id)
 
 const handleSubmit = async () => {
-  if (!canSubmit.value) return
+  if (!canSubmit.value || !role.value || !role.value.id) return
   try {
-    const response = await $api<ApiResponse<RoleWithPrivileges>>('roles', {
-      method: 'POST',
-      body: data
+    const response = await $api<ApiResponse<RoleWithPrivileges>>(`roles/${role.value.id}`, {
+      method: 'PUT',
+      body: state
     })
     if (response.error) {
       toast.add({
@@ -53,10 +62,10 @@ const handleSubmit = async () => {
       toast.add({
         severity: 'success',
         summary: 'Basarili',
-        detail: 'Rol basariyla eklendi',
+        detail: 'Rol basariyla duzenlendi',
         life: 5000
       })
-      emit('newRoleAdded')
+      emit('roleEdited')
       isOpen.value = false
     }
   } catch (e) {
@@ -64,7 +73,7 @@ const handleSubmit = async () => {
     toast.add({
       severity: 'error',
       summary: 'Hata',
-      detail: 'Rol eklerken bir hata olustu',
+      detail: 'Rol duzenlenirken bir hata olustu',
       life: 10000
     })
   }
@@ -74,10 +83,10 @@ const handleSubmit = async () => {
 </script>
 
 <template>
-  <Dialog dismissableMask v-model:visible="isOpen" modal header="Yeni Rol Ekle" :style="{ width: '25rem' }">
+  <Dialog dismissableMask v-model:visible="isOpen" modal header="Rol Duzenle" :style="{ width: '25rem' }">
     <div class="flex flex-col items-center justify-center gap-8 py-8 w-full ">
       <FloatLabel class="w-full">
-        <InputText v-model="data.name" class="w-full" id="name"/>
+        <InputText v-model="state.name" class="w-full" id="name"/>
         <label for="name">Rol ismi</label>
       </FloatLabel>
 
@@ -87,7 +96,7 @@ const handleSubmit = async () => {
             display="chip"
             filter
             id="privileges"
-            v-model="data.privileges"
+            v-model="state.privileges"
             :options="privileges"
             option-label="label"
             option-value="id"

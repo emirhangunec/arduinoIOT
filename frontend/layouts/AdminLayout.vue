@@ -1,36 +1,87 @@
 <script setup lang="ts">
-import {ChevronDown, HouseIcon, LogOut, School, User, UserPen, UserRound, Users} from 'lucide-vue-next'
+
 import Toast from 'primevue/toast';
+import {cn} from "~/lib/utils";
 
 const user = useAuthStore()
 const company = useCompanyStore()
+console.log(user.username)
+const logout = () => {
+  user.logout()
+}
+
+const MENU_ITEMS = [
+  {
+    name: 'Kullanıcılar',
+    icon: 'pi pi-users',
+    link: '/kullanicilar',
+  },
+  {
+    name: 'Odalar',
+    icon: 'pi pi-home',
+    link: '/odalar',
+  },
+  {
+    name: 'Yetkiler',
+    icon: 'pi pi-lock',
+    link: '/yetkiler',
+  }
+]
+
+const isMenuItemActive = (item: { link: string }) => {
+  return window.location.pathname === item.link
+}
+
+const isSidebarOpen = ref(true)
+const toggleSidebar = () => {
+  isSidebarOpen.value = !isSidebarOpen.value
+}
 </script>
 <template>
-  <Toast />
-  <div class="w-full h-full flex flex-col lg:flex-row items-stretch justify-self-stretch">
-    <div class="bg-[#14293C]">
-      <div class="bg-[#224162] py-4 px-8 flex items-center gap-4">
-        <img src="https://placehold.co/70x70" alt="" class="rounded-full">
-        <span class="flex flex-col gap-0.5">
-          <span class="text-white font-bold">{{ user.username}}</span>
-        <span class="text-green-500 text-sm">Cevrimci</span>
+  <Toast/>
+  <div class="w-screen h-screen overflow-hidden flex items-stretch">
+    <div class="bg-[#14293C] flex flex-col">
+      <div
+          class="bg-[#224162] flex items-center  text-white p-4 hover:bg-[#1E3A55] transition-all duration-150 ease-in-out hover:text-white"
+          :class="cn(
+          isSidebarOpen ? 'gap-4':'gap-0 justify-center'
+      )"
+      >
+        <Button icon="pi pi-bars" text class="!text-white hover:!bg-transparent"
+                @click="toggleSidebar"/>
+        <span v-show="isSidebarOpen" class="flex flex-col gap-0.5 ">
+          <span class="text-white font-bold">{{ user.username }}</span>
+        <span class="text-green-500 text-sm">{{ user.role?.name }}</span>
         </span>
       </div>
-      <div class="bg-[#14293C]">
-        <div class="flex items-center  p-4 border-b border-1-solid border-[#508C9B]">
-          <span class="text-lg font-bold text-white py-2 flex items-center justify-center gap-2"><HouseIcon/>Genel Ayarlar</span>
+      <div class="flex flex-col w-full flex-1  justify-between ">
+        <div class="flex flex-col">
+          <div v-for="item in MENU_ITEMS">
+            <router-link :to="item.link"
+                         class="flex items-center  text-white p-4 hover:bg-[#1E3A55] transition-all duration-150 ease-in-out hover:text-white"
+                         :class="cn(
+isSidebarOpen ? 'gap-4':'gap-0 justify-center',
+isMenuItemActive(item) ? 'bg-[#1E3A55]':''
+)"
+            >
+              <span class="pi pi-fw" :class="item.icon"></span>
+              <span v-show="isSidebarOpen">{{ item.name }}</span>
+            </router-link>
+          </div>
+
         </div>
-        <div class="flex flex-col gap-4 py-2 text-[#EEEEEE] ">
-          <div class="flex items-center gap-2 p-4">
-            <Users class="text-gray-400"/>
-            <span class="text-md"><a href="/kullanicilar">Kullanıcılar</a></span></div>
-          <div class="flex items-center  gap-2 p-4">
-            <School class="text-gray-400"/>
-            <span>Odalar</span></div>
-          <div class="flex items-center  gap-2 p-4">
-            <UserPen class="text-gray-400"/>
-            <span>Yetkiler</span></div>
-        </div>
+
+      </div>
+      <div class="w-full bg-[#224162]">
+        <button @click="logout"
+                class="flex w-full justify-center items-center  text-white p-4 hover:bg-[#1E3A55] transition-all duration-150 ease-in-out hover:text-destructive"
+                :class="cn(
+isSidebarOpen ? 'gap-4':'gap-0 justify-center')"
+        >
+
+          <span class="pi pi-fw pi-power-off"></span>
+          <span v-show="isSidebarOpen">Çıkış Yap</span>
+        </button>
       </div>
     </div>
     <div class="flex  flex-col flex-1">
@@ -40,12 +91,14 @@ const company = useCompanyStore()
             <span>{{ company.companyData?.name }} </span>
             YONETIM PANELI
           </div>
-<!--                    <div class="flex gap-2 items-center justify-center text-gray-200 px-4"><Bell class="text-xs"/></div>-->
+          <div class="flex gap-2 items-center justify-center text-gray-200 px-4">
+            <span class="pi pi-bell" @click="logout"></span>
+          </div>
         </div>
 
 
       </div>
-      <div class="flex flex-1">
+      <div class="flex flex-1 overflow-auto">
         <slot/>
       </div>
     </div>

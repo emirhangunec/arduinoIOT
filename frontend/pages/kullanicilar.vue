@@ -3,6 +3,7 @@ import type {RoleWithPrivileges, UserWithRoleAndPrivileges} from "PrismaTypes";
 import AddUser from "~/components/AddUser.vue";
 import EditUser from "~/components/EditUser.vue";
 import DeleteUser from "~/components/DeleteUser.vue";
+import RoleDetailDialog from "~/components/RoleDetailDialog.vue";
 
 definePageMeta({
   layout: 'admin-layout',
@@ -42,35 +43,17 @@ const deleteUser = (user: UserWithRoleAndPrivileges) => {
 
 const {data: users, status, error, refresh} = useApi<ApiResponse<UserWithRoleAndPrivileges[]>>('users')
 
+const userCanDoAnyAction = computed(() =>user.can('user.update') || user.can('user.delete'))
 </script>
 <template>
   <AddUser @new-user-added="refresh()" v-model:is-open="isAddNewUserDialogVisible"/>
   <EditUser :user="userToEdit" @user-edited="refresh()" v-model:is-open="isEditUserDialogVisible"/>
   <DeleteUser :user="userToDelete" @user-deleted="refresh()" v-model:is-open="isDeleteUserDialogVisible"/>
-  <Dialog v-model:visible="isRoleDetailDialogVisible" modal header="Rol Detaylari" :style="{ width: '25rem' }">
-    <div v-if="roleDetail">
-      <div class="flex gap-2">
-        <span class="font-bold">Rol:</span>
-        <span>{{ roleDetail.name }}</span>
-      </div>
-      <div class="flex flex-col gap-2">
-        <span class="font-bold">Yetkiler:</span>
-        <div class="flex gap-2 flex-wrap">
-          <span v-for="privilege in roleDetail.privileges" :key="privilege.id"
-                class="bg-gray-200 text-gray-800 px-2 py-1 rounded">{{ privilege.label }}
-          </span>
-
-        </div>
-      </div>
-    </div>
-    <div class="flex justify-end gap-2">
-      <Button type="button" label="Kapat" @click="isRoleDetailDialogVisible = false"></Button>
-    </div>
-  </Dialog>
+ <RoleDetailDialog :role="roleDetail" v-model:is-open="isRoleDetailDialogVisible"/>
   <DataTable class="!h-full w-full"
              :value="users?.data"
              :loading="!users"
-             size="large"
+
              striped-rows
              show-gridlines
              row-hover
@@ -102,7 +85,7 @@ const {data: users, status, error, refresh} = useApi<ApiResponse<UserWithRoleAnd
         </div>
       </template>
     </Column>
-    <Column header="İşlemler">
+    <Column v-if="userCanDoAnyAction" header="İşlemler">
       <template #body="{data}">
         <div class="flex gap-2">
           <Button icon="pi pi-pencil" severity="info" v-if="user.can('user.update')" @click="editUser(data)"/>

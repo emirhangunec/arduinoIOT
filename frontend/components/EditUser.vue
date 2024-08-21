@@ -97,7 +97,7 @@ const showNewRoleDialog = () => {
 
 <template>
   <AddRole @new-role-added="onNewRoleAdded" v-model:is-open="isNewRoleDialogVisible"/>
-  <Dialog v-model:visible="isOpen" modal header="Kullaniciyi duzenle" :style="{ width: '25rem' }">
+  <Dialog dismissableMask v-model:visible="isOpen" modal header="Kullaniciyi duzenle" :style="{ width: '25rem' }">
     <div class="flex flex-col items-center justify-center gap-8 py-8 w-full ">
       <FloatLabel class="w-full">
         <InputText v-model="state.name" class="w-full" id="name"/>
@@ -116,7 +116,7 @@ const showNewRoleDialog = () => {
         <FloatLabel class="w-full">
           <Select id="role"
                   v-model="state.roleId"
-                  :options="roles"
+                  :options="roles.filter(role => role.id !== '1')"
                   option-label="name"
                   option-value="id"
                   checkmark

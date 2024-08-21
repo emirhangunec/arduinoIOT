@@ -52,7 +52,7 @@ const handleSubmit = async () => {
 </script>
 
 <template>
-  <Dialog v-model:visible="isOpen" modal header="Kullaniciyi sil" :style="{ width: '25rem' }">
+  <Dialog dismissableMask v-model:visible="isOpen" modal header="Kullaniciyi sil" :style="{ width: '25rem' }">
     <div v-if="userToDelete" class="flex flex-col items-center justify-center gap-8 py-8 w-full ">
 
       <div class="flex gap-2">
