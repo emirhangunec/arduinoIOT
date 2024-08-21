@@ -4,6 +4,8 @@ import cors from 'cors';
 import {comparePassword, hashPassword} from "./bcrypt";
 import jwt from 'jsonwebtoken';
 import usersRouter from "./api/routers/users-router";
+import privilegesRouter from "./api/routers/privileges-router";
+import rolesRouter from "./api/routers/roles-router";
 
 const app = express();
 
@@ -14,8 +16,6 @@ app.use(cors())
 
 app.get('/', async (req, res) => {
 
-    const users = await db.user.findMany();
-    console.log(users);
     res.json({message: 'api is ok and running'});
 });
 
@@ -33,9 +33,6 @@ app.get('/company', async (req, res) => {
 
 app.post('/setup', async (req, res) => {
     const {name, email, password, companyName} = req.body;
-    console.log({
-        name, email, password, companyName
-    });
     let user, company;
     try {
 
@@ -46,8 +43,20 @@ app.post('/setup', async (req, res) => {
                 name,
                 email,
                 password: hashedPassword,
-                isAdmin: true
-            }
+                isAdmin: true,
+                role: {
+                    connect: {
+                        id: '1'
+                    }
+                }
+            },
+            include: {
+                role: {
+                    include: {
+                        privileges: true
+                    }
+                }
+            },
         });
 
 
@@ -87,7 +96,16 @@ app.post('/login', async (req, res) => {
     if (!email || !password) {
         return res.status(400).json({message: 'email and password are required'});
     }
-    const user = await db.user.findUnique({where: {email}});
+    const user = await db.user.findUnique({
+        where: {email},
+        include: {
+            role: {
+                include: {
+                    privileges: true
+                }
+            }
+        }
+    });
     if (!user) {
         return res.status(404).json({message: 'user not found'});
     }
@@ -101,5 +119,6 @@ app.post('/login', async (req, res) => {
 })
 
 app.use('/users', usersRouter);
-
+app.use('/privileges', privilegesRouter);
+app.use('/roles', rolesRouter);
 export default app;

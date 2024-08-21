@@ -3,7 +3,7 @@ import {PrismaClient} from '@prisma/client'
 const prisma = new PrismaClient()
 
 async function main() {
-    await prisma.privilege.createMany({
+    const privileges= await prisma.privilege.createManyAndReturn({
         data: [
             {name: 'user.create', label: 'Yeni kullanıcı oluşturma'},
             {name: 'user.read', label: 'Kullanıcıları listeleme'},
@@ -26,12 +26,11 @@ async function main() {
         ],
     })
 
-    const allPrivilegeIds = (await prisma.privilege.findMany({
-        select: {id: true}
-    })).map(p => ({id: p.id}))
+    const allPrivilegeIds = privileges.map(p => ({id: p.id}))
 
     await prisma.role.create({
         data: {
+            id: '1',
             name: 'admin',
             privileges: {
                 connect: allPrivilegeIds

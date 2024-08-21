@@ -1,7 +1,7 @@
 export default defineNuxtPlugin({
     setup() {
         const authStore = useAuthStore()
-        const token = authStore.token ? `Bearer ${authStore.token}` : ``;
+        const token = authStore.token
 
         const runtimeConfig = useRuntimeConfig()
         const api = $fetch.create({

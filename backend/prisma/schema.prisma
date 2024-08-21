@@ -34,7 +34,8 @@ model User {
   password  String
   isAdmin   Boolean @default(false)
 
-  roles     Role[]
+  roleId    String
+  role    Role @relation(fields: [roleId], references: [id])
 }
 
 model Privilege {

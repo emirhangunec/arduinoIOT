@@ -1,20 +1,21 @@
 import {Request as ExpressRequest} from "express";
-import {User} from "@prisma/client";
 
-type UserWithoutPassword = Omit<User, 'password'>;
+import {UserWithRoleAndPrivileges} from "../prisma/prisma";
+
+
 declare module Express {
     interface Request extends ExpressRequest {
-        user?: UserWithoutPassword;
+        user?: UserWithRoleAndPrivileges ;
     }
 
 }
 declare module 'express-serve-static-core' {
     interface Request {
-        user?: UserWithoutPassword;
+        user?:UserWithRoleAndPrivileges ;
     }
 }
 declare module "express-session" {
     interface SessionData {
-        user: UserWithoutPassword;
+        user: UserWithRoleAndPrivileges;
     }
 }

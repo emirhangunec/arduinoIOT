@@ -1,8 +1,8 @@
 import {useLocalStorage} from "@vueuse/core";
 import {jwtDecode, type JwtPayload} from "jwt-decode";
-import type {User} from "PrismaTypes";
+import type {UserWithRoleAndPrivileges} from "PrismaTypes";
 
-type PasswordlessUser = Omit<User, 'password'>
+type PasswordlessUser = Omit<UserWithRoleAndPrivileges, 'password'>
 function isValidUser (user: PasswordlessUser): user is PasswordlessUser {
     return !!user.id && !!user.email && !!user.name && !!user.isAdmin
 }
@@ -38,14 +38,30 @@ export const useAuthStore = defineStore('auth', () => {
             return null
         }
     })
-
+    const role = computed(() => user.value?.role)
+    const username = computed(() => user.value?.name)
+    const isAdmin = computed(() => user.value?.isAdmin)
+    const privileges = computed(() => role.value?.privileges)
+    const can = (privilege: string | string[]) =>{
+        if (Array.isArray(privilege)){
+            return privilege.every(_p =>  privileges.value?.some(p => p.name === _p))
+        }
+        else {
+            return  privileges.value?.some(p => p.name === privilege)
+        }
+    }
 
     return {
         isLoggedIn,
         user,
         token,
+        role,
+        username,
+        isAdmin,
+        privileges,
         login,
         logout,
+        can
     }
 
 })
