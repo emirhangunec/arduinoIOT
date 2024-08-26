@@ -7,6 +7,8 @@ export type Role = Prisma.Role;
 export type Privilege = Prisma.Privilege;
 export type Company = Prisma.Company;
 export type Device = Prisma.Device;
+export type Room = Prisma.Room;
+export type OpenHour = Prisma.OpenHour;
 
 
 export interface RoleWithPrivileges extends Role {
