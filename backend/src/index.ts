@@ -10,7 +10,6 @@ const server = http.createServer(app);
 
 
 server.on('upgrade', (request, socket, head) => {
-    console.log(request.url, request.headers);
     if (request.url?.startsWith('/iot')) {
         ArduinoWebSocketServer.handleUpgrade(request, socket, head, (ws) => {
             ArduinoWebSocketServer.emit('connection', ws, request);
