@@ -24,14 +24,12 @@ wss.on("connection", (ws: IotWebSocket, request) => {
                 break;
             case "ping":
                 ws.lastPing = Date.now();
-                console.log("Ping received from device.");
                 eventHandler.emit("device-ping", {id: ws.id, isOnline: true});
                 break;
 
             case "window":
                 ws.window = parseInt(value) === 1;
                 if (ws.id === undefined) return;
-                console.log(`Window status changed to ${ws.window}`);
                 eventHandler.emit("window-status", {id: ws.id, window: ws.window});
                 break;
             default:
@@ -66,6 +64,7 @@ setInterval(() => {
         onlineClients.push(client);
     });
 
+    if (onlineClients.length === 0) return;
     eventHandler.emit("online-devices", onlineClients);
 }, 5000);
 
