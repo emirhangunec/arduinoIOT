@@ -49,7 +49,7 @@ const deleteRole = (role: RoleWithPrivileges) => {
   <DataTable class="!h-full w-full"
              :value="roles?.data"
              :loading="!roles"
-             striped-rows
+             striped-rolocalws
              show-gridlines
              row-hover
              paginator

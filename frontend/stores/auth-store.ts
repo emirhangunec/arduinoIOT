@@ -47,6 +47,14 @@ export const useAuthStore = defineStore('auth', () => {
             return  privileges.value?.some(p => p.name === privilege)
         }
     }
+    const canOr = (privilege: string | string[]) =>{
+        if (Array.isArray(privilege)){
+            return privilege.some(_p =>  privileges.value?.some(p => p.name === _p))
+        }
+        else {
+            return  privileges.value?.some(p => p.name === privilege)
+        }
+    }
 
     return {
         isLoggedIn,
@@ -58,7 +66,8 @@ export const useAuthStore = defineStore('auth', () => {
         privileges,
         login,
         logout,
-        can
+        can,
+        canOr
     }
 
 })

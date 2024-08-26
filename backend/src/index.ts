@@ -8,7 +8,9 @@ dotenv.config();
 const server = http.createServer(app);
 
 
+
 server.on('upgrade', (request, socket, head) => {
+    console.log(request.url, request.headers);
     if (request.url?.startsWith('/iot')) {
         ArduinoWebSocketServer.handleUpgrade(request, socket, head, (ws) => {
             ArduinoWebSocketServer.emit('connection', ws, request);
@@ -21,6 +23,7 @@ server.on('upgrade', (request, socket, head) => {
 });
 
 const PORT = process.env.BACKEND_PORT ?? 3001;
+
 server.listen(PORT, () => {
-    console.log(`Sunucu http://localhost:${PORT} adresinde çalışıyor.`);
+    console.log(`Sunucu http://0.0.0.0:${PORT} adresinde çalışıyor.`);
 });

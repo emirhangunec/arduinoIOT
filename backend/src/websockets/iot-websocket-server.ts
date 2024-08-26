@@ -1,5 +1,6 @@
 import WebSocket, { WebSocketServer } from "ws";
 import prisma from "../../prisma/prisma";
+import eventHandler from "../events";
 
 const wss = new WebSocketServer({ noServer: true });
 
@@ -34,6 +35,7 @@ wss.on("connection", (ws: IotWebSocket, request) => {
           },
         });
         console.log("res", res);
+        eventHandler.emit("device-online", res);
         break;
       case "ping":
         ws.lastPing = Date.now();

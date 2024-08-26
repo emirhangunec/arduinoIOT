@@ -13,43 +13,70 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model Device {
-  id        String   @id
-  ip        String
-  isOnline  Boolean @default(false)
-  name      String @default("New Device")
+  id       String  @id
+  ip       String
+  isOnline Boolean @default(false)
+  hasWindowSensor Boolean @default(false)
+  hasHeaterControl Boolean @default(false)
+  hasElectricityControl Boolean @default(false)
+
+  roomId String? @unique
+  room   Room?   @relation(fields: [roomId], references: [id])
 }
 
 model Company {
   id   String @id @default(cuid())
   name String
-
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String
-  password  String
-  isAdmin   Boolean @default(false)
+  id       String  @id @default(cuid())
+  email    String  @unique
+  name     String
+  password String
+  isAdmin  Boolean @default(false)
 
-  roleId    String
-  role    Role @relation(fields: [roleId], references: [id])
+  rooms Room[]
+  roleId String
+  role   Role   @relation(fields: [roleId], references: [id])
 }
 
 model Privilege {
-  id        String   @id @default(cuid())
-  name      String
-  label     String
-  roles     Role[]
+  id    String @id @default(cuid())
+  name  String
+  label String
+  roles Role[]
 }
 
-
 model Role {
-  id        String   @id @default(cuid())
-  name      String
+  id   String @id @default(cuid())
+  name String
 
   privileges Privilege[]
   users      User[]
+}
+
+model Room {
+  id   String @id @default(cuid())
+  name String
+  doorNumber String?
+  floor String?
+  sector String?
+
+
+  openHours OpenHour[]
+  users   User[]
+  deviceId String
+  device   Device?
+}
+
+model OpenHour {
+  id        String @id @default(cuid())
+  dayOfWeek String
+  openHour  String
+  closeHour String
+
+  roomId String @unique
+  room   Room   @relation(fields: [roomId], references: [id])
 }
