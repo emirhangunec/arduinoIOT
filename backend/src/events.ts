@@ -7,7 +7,7 @@ class EventHandler extends EventEmitter {
     }
 
     emit(eventName: string | symbol, ...args: any) {
-        console.log(`Event emitted: ${eventName.toString} with args: ${args}`);
+        console.log(`Event emitted: ${eventName.toString()} with args: ${args}`);
         return super.emit(eventName, ...args);
     }
 
