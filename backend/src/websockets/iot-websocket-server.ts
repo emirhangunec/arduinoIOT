@@ -24,12 +24,14 @@ wss.on("connection", (ws: IotWebSocket, request) => {
                 break;
             case "ping":
                 ws.lastPing = Date.now();
+                console.log("Ping received from device.");
                 eventHandler.emit("device-ping", {id: ws.id, isOnline: true});
                 break;
 
             case "window":
                 ws.window = parseInt(value) === 1;
                 if (ws.id === undefined) return;
+                console.log(`Window status changed to ${ws.window}`);
                 eventHandler.emit("window-status", {id: ws.id, window: ws.window});
                 break;
             default:
@@ -39,6 +41,8 @@ wss.on("connection", (ws: IotWebSocket, request) => {
     });
     ws.on("close", async () => {
         if (ws.id === undefined || ws.ip === undefined) return;
+        console.log("Device disconnected.");
+        eventHandler.emit("device-ping", {id: ws.id, isOnline: false});
         const res = await updateDevice(ws.id, {isOnline: false});
     });
 });
@@ -54,6 +58,7 @@ setInterval(() => {
 
         if (client.lastPing < Date.now() - 30000) {
             console.log("Client is not responding. Terminating connection.");
+            eventHandler.emit("device-ping", {id: client.id, isOnline: false});
             client.terminate();
             return;
         }
