@@ -1,4 +1,5 @@
 <script setup lang="ts">
+
 definePageMeta({
   layout: 'admin-layout',
   middleware: to => {
@@ -8,6 +9,8 @@ definePageMeta({
 })
 
 const user = useAuthStore()
+const roomStore = useRoomsStore()
+
 </script>
 
 <template>

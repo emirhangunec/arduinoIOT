@@ -63,11 +63,8 @@ model Room {
   doorNumber String?
   floor String?
   sector String?
-
-
   openHours OpenHour[]
   users   User[]
-  deviceId String
   device   Device?
 }
 

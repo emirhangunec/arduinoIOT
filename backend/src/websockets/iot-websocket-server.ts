@@ -1,6 +1,7 @@
 import WebSocket, {WebSocketServer} from "ws";
 import {updateDevice, updateOrCreateDevice} from "@/helpers/device";
 import eventHandler from "@/events";
+import prisma from "db";
 
 const wss = new WebSocketServer({noServer: true});
 
@@ -45,8 +46,15 @@ wss.on("connection", (ws: IotWebSocket, request) => {
     });
 });
 
+const getDevice = async (id: string) => {
+    return prisma.device.findUnique({
+        where: {
+            id
+        }
+    });
+}
 
-setInterval(() => {
+setInterval(async () => {
     const onlineClients: IotWebSocket[] = [];
     wss.clients.forEach((ws: WebSocket) => {
         const client = ws as IotWebSocket;
@@ -64,8 +72,31 @@ setInterval(() => {
         onlineClients.push(client);
     });
 
-    if (onlineClients.length === 0) return;
-    eventHandler.emit("online-devices", onlineClients);
+    if (onlineClients.length === 0) {
+        const fakeData = await prisma.device.findFirst({
+            where: {
+                id: '1'
+            }
+        })
+        if (fakeData === null) return;
+
+        const fakeClients = [{
+            id: fakeData.id,
+            ip: fakeData.ip,
+            window: Math.random() > 0.5,
+            lastPing: Date.now()
+        }]
+        const simpleClients = await Promise.all(fakeClients.filter((client) => client.id !== undefined).map(async (client) => await getDevice(client.id as string)))
+
+        eventHandler.emit("online-devices", simpleClients);
+        return;
+    }
+
+    const simpleClients = await Promise.all(onlineClients.filter((client) => client.id !== undefined).map(async (client) => await getDevice(client.id as string)))
+
+
+    eventHandler.emit("online-devices", simpleClients);
+
 }, 5000);
 
 export default wss;

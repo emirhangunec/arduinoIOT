@@ -11,6 +11,10 @@ export type Room = Prisma.Room;
 export type OpenHour = Prisma.OpenHour;
 
 
+export interface RoomWithOpenHours extends Room {
+    openHours: OpenHour[]
+}
+
 export interface RoleWithPrivileges extends Role {
     privileges: Privilege[]
 }

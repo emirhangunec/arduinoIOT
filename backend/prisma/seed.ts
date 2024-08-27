@@ -3,6 +3,8 @@ import {PrismaClient} from '@prisma/client'
 const prisma = new PrismaClient()
 
 async function main() {
+
+
     const privileges= await prisma.privilege.createManyAndReturn({
         data: [
             {name: 'user.create', label: 'Yeni kullanıcı oluşturma'},
@@ -37,6 +39,15 @@ async function main() {
             }
         }
     })
+
+    const fakeDevice = await prisma.device.create({
+        data: {
+            id: '1',
+            ip: '::ffff:192.168.1.100',
+            isOnline: false,
+        }
+    })
+
 }
 
 main()

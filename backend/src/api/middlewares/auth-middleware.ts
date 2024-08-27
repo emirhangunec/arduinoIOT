@@ -1,6 +1,6 @@
 import {NextFunction, Request, Response} from 'express';
 import jwt from "jsonwebtoken";
-import {UserWithRoleAndPrivileges} from "../../../prisma/prisma";
+import {UserWithRoleAndPrivileges} from "db";
 
 
 export default async function authMiddleware(req: Request, res: Response, next: NextFunction) {

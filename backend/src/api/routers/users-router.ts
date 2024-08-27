@@ -1,7 +1,7 @@
 import express from "express";
-import db, {UserWithRoleAndPrivileges} from "../../../prisma/prisma";
+import db, {UserWithRoleAndPrivileges} from "db";
 import authMiddleware from "../middlewares/auth-middleware";
-import {hashPassword} from "../../bcrypt";
+import {hashPassword} from "@/bcrypt";
 
 
 const router = express.Router();

@@ -3,11 +3,13 @@ import eventHandler from "../events";
 
 const wss = new WebSocketServer({noServer: true});
 
-eventHandler.on('device-online', (device) => {
+eventHandler.on('online-devices', (device) => {
     wss.clients.forEach((client) => {
-        if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify(device));
+        const data = {
+            eventName: 'online-devices',
+            data: device
         }
+        client.send(JSON.stringify(data));
     });
 })
 
@@ -16,7 +18,8 @@ wss.on('connection', (ws: WebSocket, request) => {
         console.log(message);
     });
 
-    ws.on('close', () => {});
+    ws.on('close', () => {
+    });
 });
 
 export default wss;

@@ -1,5 +1,5 @@
 import express from "express";
-import db from "../../../prisma/prisma";
+import db from "db";
 import authMiddleware from "../middlewares/auth-middleware";
 
 

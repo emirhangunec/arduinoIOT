@@ -1,11 +1,13 @@
 import express from 'express';
-import db from "../prisma/prisma";
+import db from "db";
 import cors from 'cors';
 import {comparePassword, hashPassword} from "./bcrypt";
 import jwt from 'jsonwebtoken';
-import usersRouter from "./api/routers/users-router";
-import privilegesRouter from "./api/routers/privileges-router";
-import rolesRouter from "./api/routers/roles-router";
+import usersRouter from "@/api/routers/users-router";
+import privilegesRouter from "@/api/routers/privileges-router";
+import rolesRouter from "@/api/routers/roles-router";
+import deviceRouter from "@/api/routers/device-router";
+import roomsRouter from "@/api/routers/rooms-router";
 
 const app = express();
 
@@ -121,4 +123,6 @@ app.post('/login', async (req, res) => {
 app.use('/users', usersRouter);
 app.use('/privileges', privilegesRouter);
 app.use('/roles', rolesRouter);
+app.use('/device', deviceRouter);
+app.use('/rooms', roomsRouter);
 export default app;
