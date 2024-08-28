@@ -9,6 +9,7 @@ const {
   notifications,
   markNotificationAsRead,
   markAllNotificationsAsRead,
+    sendNotification
 } = useNotifications()
 
 const generateTailwindClassesForNotification = (notification:ToastMessageOptions) => {
@@ -34,7 +35,11 @@ const generateTailwindClassesForNotification = (notification:ToastMessageOptions
   <Popover>
     <PopoverTrigger as-child>
       <Button variant="outline">
-        <button class="pi pi-bell"></button>
+        <button @click="sendNotification({
+          summary: 'Test Notification',
+          detail: 'This is a test notification',
+          severity: 'info'
+        })" class="pi pi-bell"></button>
       </Button>
     </PopoverTrigger>
     <PopoverContent class="w-80">

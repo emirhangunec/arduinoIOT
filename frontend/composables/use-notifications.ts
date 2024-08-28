@@ -3,42 +3,45 @@ import type {ToastMessageOptions} from "primevue/toast";
 export function useNotifications() {
     const roomStore = useRoomsStore()
     const toast = useToast()
-    const notificationsShowedOnToast= useLocalStorage<ToastMessageOptions[]>('notificationsShowedOnToast', [])
+    const notificationsShowedOnToast = useLocalStorage<ToastMessageOptions[]>('notificationsShowedOnToast', [])
     const notificationsMarkedAsRead = useLocalStorage<ToastMessageOptions[]>('notificationsMarkedAsRead', [])
-
+    const notifications = ref<ToastMessageOptions[]>([])
     const devicesWithoutRoom = computed(() => roomStore.devices.filter(device => !device.room))
 
-    const devicesWithoutRoomNotification = computed(() => ({
-        severity: 'warn',
-        summary: 'Odası olmayan cihazlar',
-        detail: `Odası olmayan ${devicesWithoutRoom.value.length} cihaz bulunmaktadır.`,
-        life: 2000,
+    const addNotification = (notification: ToastMessageOptions) => {
+        if (!notifications.value.find(_notification => _notification.detail === notification.detail)) {
+            notifications.value.push(notification)
+        }
+    }
 
-    } as ToastMessageOptions))
+    watch(notifications, (notifications) => {
+        notifications.forEach(notification => {
+            //    check is notification already showed on toast, if not show it and add it to showed notifications
+            if (!notificationsShowedOnToast.value.some(_notification => _notification.detail === notification.detail)) {
+                toast.add({...notification, life: 2000})
+                notificationsShowedOnToast.value.push(notification)
+            }
+        })
+    },{
+        immediate: true,
+        deep: true
+    })
 
     watch(devicesWithoutRoom, (devicesWithoutRoom) => {
-
         if (devicesWithoutRoom.length > 0) {
-            if (!notificationsShowedOnToast.value.find(notification => notification.detail === devicesWithoutRoomNotification.value.detail)) {
-                toast.add(devicesWithoutRoomNotification.value)
-                notificationsShowedOnToast.value.push(devicesWithoutRoomNotification.value)
-            }
+            const devicesWithoutRoomNotification = {
+                severity: 'warn',
+                summary: 'Odası olmayan cihazlar',
+                detail: `Odası olmayan ${devicesWithoutRoom.length} cihaz bulunmaktadır.`,
+
+            } as ToastMessageOptions
+
+            addNotification(devicesWithoutRoomNotification)
         }
+
     }, {immediate: true})
 
-    const notifications = computed(() => {
-        const notifications: ToastMessageOptions[] = []
-
-        if (devicesWithoutRoom.value.length > 0) {
-            notifications.push(devicesWithoutRoomNotification.value)
-        }
-
-        if (notifications.length > 0 && notificationsMarkedAsRead.value.length > 0) {
-            return notifications.filter(notification => !notificationsMarkedAsRead.value.find(readedNotification => readedNotification.detail === notification.detail))
-        }
-
-        return notifications
-    })
+    const unReadNotifications = computed(() => notifications.value.filter(notification => !notificationsMarkedAsRead.value.some(notificationMarkedAsRead => notificationMarkedAsRead.detail === notification.detail)))
 
     const markNotificationAsRead = (notification: ToastMessageOptions) => {
         notificationsMarkedAsRead.value.push(notification)
@@ -48,9 +51,16 @@ export function useNotifications() {
         notifications.value.forEach(markNotificationAsRead)
     }
 
+    const sendNotification = (notification: ToastMessageOptions) => {
+        addNotification(notification)
+    }
+
+
+
     return {
-        notifications,
+        notifications: unReadNotifications,
         markNotificationAsRead,
-        markAllNotificationsAsRead
+        markAllNotificationsAsRead,
+        sendNotification
     }
 }
