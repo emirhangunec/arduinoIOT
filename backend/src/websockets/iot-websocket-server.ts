@@ -48,14 +48,17 @@ wss.on("connection", (ws: IotWebSocket, request) => {
     });
 });
 
-setInterval(() => {
-// test data, development only
-    if (onlineClientIds.size === 0) {
-        const fakeDataId = '1'
-        onlineClientIds.add(fakeDataId)
-    }
-    eventHandler.emit("online-device-ids", Array.from(onlineClientIds));
-}, 5000)
+// setInterval(() => {
+// // test data, development only
+//     if (onlineClientIds.size === 0) {
+//         const fakeDataId = '1'
+//         onlineClientIds.add(fakeDataId)
+//     }
+//     else{
+//         onlineClientIds.delete('1')
+//     }
+//     eventHandler.emit("online-device-ids", Array.from(onlineClientIds));
+// }, 5000)
 
 setInterval(() => {
     wss.clients.forEach((ws: WebSocket) => {
@@ -63,6 +66,7 @@ setInterval(() => {
         if (client.readyState !== WebSocket.OPEN
             || client.lastPing === undefined
             || client.id === undefined) {
+            console.log("client terminated");
             client.terminate()
             if (client.id === undefined) return;
             onlineClientIds.delete(client.id)
