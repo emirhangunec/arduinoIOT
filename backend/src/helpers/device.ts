@@ -1,4 +1,4 @@
-import db, {Device} from 'db'
+import db, {Device, DeviceWithRoomAndOpenHours} from 'db'
 
 export async function updateOrCreateDevice(id: string, ip: string, isOnline: boolean): Promise<Device> {
     return db.device.upsert({
@@ -24,4 +24,19 @@ export async function updateDevice(id: string, data: Partial<Device>): Promise<D
         },
         data
     });
+}
+
+export async function getDeviceWithRoomAndOpenHours(deviceId: string): Promise<DeviceWithRoomAndOpenHours | null> {
+    return db.device.findUnique({
+        where: {
+            id: deviceId
+        },
+        include: {
+            room: {
+                include: {
+                    openHours: true
+                }
+            }
+        }
+    })
 }

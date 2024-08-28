@@ -1,7 +1,8 @@
 import WebSocket, {WebSocketServer} from "ws";
 import {updateDevice, updateOrCreateDevice} from "@/helpers/device";
 import eventHandler from "@/events";
-import prisma from "db";
+
+const onlineClientIds = new Set<string>();
 
 const wss = new WebSocketServer({noServer: true});
 
@@ -22,10 +23,11 @@ wss.on("connection", (ws: IotWebSocket, request) => {
                 ws.id = value;
                 if (ws.ip === undefined) return;
                 const res = await updateOrCreateDevice(ws.id, ws.ip, true);
+                onlineClientIds.add(ws.id);
+                eventHandler.emit("online-device-ids", Array.from(onlineClientIds));
                 break;
             case "ping":
                 ws.lastPing = Date.now();
-                eventHandler.emit("device-ping", {id: ws.id, isOnline: true});
                 break;
 
             case "window":
@@ -40,63 +42,38 @@ wss.on("connection", (ws: IotWebSocket, request) => {
     });
     ws.on("close", async () => {
         if (ws.id === undefined || ws.ip === undefined) return;
-        console.log("Device disconnected.");
-        eventHandler.emit("device-ping", {id: ws.id, isOnline: false});
         const res = await updateDevice(ws.id, {isOnline: false});
+        onlineClientIds.delete(ws.id);
+        eventHandler.emit("online-device-ids", Array.from(onlineClientIds));
     });
 });
 
-const getDevice = async (id: string) => {
-    return prisma.device.findUnique({
-        where: {
-            id
-        }
-    });
-}
+setInterval(() => {
+// test data, development only
+    if (onlineClientIds.size === 0) {
+        const fakeDataId = '1'
+        onlineClientIds.add(fakeDataId)
+    }
+    eventHandler.emit("online-device-ids", Array.from(onlineClientIds));
+}, 5000)
 
-setInterval(async () => {
-    const onlineClients: IotWebSocket[] = [];
+setInterval(() => {
     wss.clients.forEach((ws: WebSocket) => {
         const client = ws as IotWebSocket;
-        if (client.readyState !== WebSocket.OPEN) return;
-        if (client.lastPing === undefined) return;
-        if (client.id === undefined) return;
-
-        if (client.lastPing < Date.now() - 30000) {
-            console.log("Client is not responding. Terminating connection.");
-            eventHandler.emit("device-ping", {id: client.id, isOnline: false});
-            client.terminate();
+        if (client.readyState !== WebSocket.OPEN
+            || client.lastPing === undefined
+            || client.id === undefined) {
+            client.terminate()
+            if (client.id === undefined) return;
+            onlineClientIds.delete(client.id)
             return;
         }
+        if (client.lastPing < Date.now() - 30000) {
+            client.terminate();
+            onlineClientIds.delete(client.id)
+        }
+    })
+}, 5000)
 
-        onlineClients.push(client);
-    });
-
-    if (onlineClients.length === 0) {
-        const fakeData = await prisma.device.findFirst({
-            where: {
-                id: '1'
-            }
-        })
-        if (fakeData === null) return;
-
-        const fakeClients = [{
-            id: fakeData.id,
-            ip: fakeData.ip,
-            window: Math.random() > 0.5,
-            lastPing: Date.now()
-        }]
-        const simpleClients = await Promise.all(fakeClients.filter((client) => client.id !== undefined).map(async (client) => await getDevice(client.id as string)))
-
-        eventHandler.emit("online-devices", simpleClients);
-        return;
-    }
-
-    const simpleClients = await Promise.all(onlineClients.filter((client) => client.id !== undefined).map(async (client) => await getDevice(client.id as string)))
-
-
-    eventHandler.emit("online-devices", simpleClients);
-
-}, 5000);
 
 export default wss;

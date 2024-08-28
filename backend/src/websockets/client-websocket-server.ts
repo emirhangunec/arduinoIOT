@@ -1,15 +1,21 @@
 import WebSocket, {WebSocketServer} from "ws";
 import eventHandler from "../events";
+import {DeviceWithRoomAndOpenHours} from "db";
+import {getDeviceWithRoomAndOpenHours} from "@/helpers/device";
 
 const wss = new WebSocketServer({noServer: true});
 
-eventHandler.on('online-devices', (device) => {
+eventHandler.on('online-device-ids', async (deviceIds: string[]) => {
+    const devices: (DeviceWithRoomAndOpenHours | null)[] = await Promise.all(deviceIds.map(async (id) => {
+        return getDeviceWithRoomAndOpenHours(id);
+    }))
+
+    const onlineDevices = devices.filter(d => d !== null) as DeviceWithRoomAndOpenHours[]
     wss.clients.forEach((client) => {
-        const data = {
+        client.send(JSON.stringify({
             eventName: 'online-devices',
-            data: device
-        }
-        client.send(JSON.stringify(data));
+            data: onlineDevices
+        }))
     });
 })
 
@@ -19,6 +25,7 @@ wss.on('connection', (ws: WebSocket, request) => {
     });
 
     ws.on('close', () => {
+        console.log('Client disconnected');
     });
 });
 

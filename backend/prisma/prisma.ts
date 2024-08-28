@@ -10,6 +10,13 @@ export type Device = Prisma.Device;
 export type Room = Prisma.Room;
 export type OpenHour = Prisma.OpenHour;
 
+export interface DeviceWithRoom extends Device {
+    room: Room | null
+}
+
+export interface  DeviceWithRoomAndOpenHours extends Device {
+    room: RoomWithOpenHours | null
+}
 
 export interface RoomWithOpenHours extends Room {
     openHours: OpenHour[]
