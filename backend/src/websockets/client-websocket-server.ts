@@ -6,9 +6,7 @@ import {getDeviceWithRoomAndOpenHours} from "@/helpers/device";
 const wss = new WebSocketServer({noServer: true});
 
 eventHandler.on('online-device-ids', async (deviceIds: string[]) => {
-    const devices: (DeviceWithRoomAndOpenHours | null)[] = await Promise.all(deviceIds.map(async (id) => {
-        return getDeviceWithRoomAndOpenHours(id);
-    }))
+    const devices: (DeviceWithRoomAndOpenHours | null)[] = await Promise.all(deviceIds.map(getDeviceWithRoomAndOpenHours))
 
     const onlineDevices = devices.filter(d => d !== null) as DeviceWithRoomAndOpenHours[]
     wss.clients.forEach((client) => {

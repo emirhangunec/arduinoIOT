@@ -19,9 +19,9 @@ export default defineNuxtConfig({
         options: {
             theme: {
                 preset: Aura,
-                options:{
-                    darkModeSelector:'do-not-enter-dark-mode',
-                    cssLayer:false
+                options: {
+                    darkModeSelector: 'do-not-enter-dark-mode',
+                    cssLayer: false
                 }
             },
 
@@ -51,5 +51,5 @@ export default defineNuxtConfig({
          */
         componentDir: './components/ui'
     },
-    modules: ["@nuxtjs/tailwindcss", "@nuxt/eslint", "@pinia/nuxt", "shadcn-nuxt", "@primevue/nuxt-module"],
+    modules: ["@nuxtjs/tailwindcss", "@nuxt/eslint", "@pinia/nuxt", "shadcn-nuxt", "@primevue/nuxt-module", '@vueuse/nuxt'],
 })

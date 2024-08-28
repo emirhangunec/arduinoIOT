@@ -2,6 +2,7 @@
 
 import Toast from 'primevue/toast';
 import {cn} from "~/lib/utils";
+import Notifications from "~/components/Notifications.vue";
 
 const user = useAuthStore()
 const company = useCompanyStore()
@@ -25,6 +26,11 @@ const MENU_ITEMS = [
     name: 'Yetkiler',
     icon: 'pi pi-lock',
     link: '/yetkiler',
+  },
+  {
+    name: 'Cihazlar',
+    icon: 'pi pi-microchip',
+    link: '/cihazlar'
   }
 ]
 
@@ -86,14 +92,12 @@ isSidebarOpen ? 'gap-4':'gap-0 justify-center')"
     </div>
     <div class="flex  flex-col flex-1">
       <div class="flex">
-        <div class="w-full bg-[#14293C] flex justify-between items-center">
-          <div class="text-white p-4">
+        <div class="w-full bg-[#14293C] px-4 flex justify-between items-center">
+          <div class="text-white py-4">
             <span>{{ company.companyData?.name }} </span>
             YONETIM PANELI
           </div>
-          <div class="flex gap-2 items-center justify-center text-gray-200 px-4">
-            <span class="pi pi-bell" @click="logout"></span>
-          </div>
+          <Notifications/>
         </div>
 
 

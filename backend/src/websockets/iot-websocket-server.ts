@@ -47,8 +47,8 @@ wss.on("connection", (ws: IotWebSocket, request) => {
     });
 });
 
-// setInterval(() => {
-// // test data, development only
+setInterval(() => {
+// test data, development only
 //     if (onlineClientIds.size === 0) {
 //         const fakeDataId = '1'
 //         onlineClientIds.add(fakeDataId)
@@ -56,8 +56,8 @@ wss.on("connection", (ws: IotWebSocket, request) => {
 //     else{
 //         onlineClientIds.delete('1')
 //     }
-//     eventHandler.emit("online-device-ids", Array.from(onlineClientIds));
-// }, 5000)
+    eventHandler.emit("online-device-ids", Array.from(onlineClientIds));
+}, 5000)
 
 setInterval(() => {
     wss.clients.forEach((ws: WebSocket) => {
