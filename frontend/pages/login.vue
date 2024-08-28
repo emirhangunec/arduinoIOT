@@ -11,8 +11,6 @@ import { Input } from '~/components/ui/input'
 import { toTypedSchema } from '@vee-validate/zod'
 import * as z from 'zod'
 import { useForm } from 'vee-validate'
-import { Button } from '~/components/ui/button'
-import { toast } from '~/components/ui/toast'
 import { Mail} from 'lucide-vue-next'
 import { LockKeyhole } from 'lucide-vue-next'
 const authStore = useAuthStore()
@@ -27,7 +25,13 @@ const formSchema = toTypedSchema(
 const { isFieldDirty, handleSubmit } = useForm({
 	validationSchema: formSchema,
 })
-
+const toast = useToast()
+toast.add({
+  severity: 'error',
+  summary: 'API Error',
+  detail: `Fetch failedasdajs}`,
+  life: 2000
+})
 const onSubmit = handleSubmit(async (values) => {
 	try {
 		const res = await $api<{
