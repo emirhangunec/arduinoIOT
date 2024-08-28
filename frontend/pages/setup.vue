@@ -3,14 +3,13 @@ import {useForm} from 'vee-validate'
 import {toTypedSchema} from '@vee-validate/zod'
 import * as z from 'zod'
 import {vAutoAnimate} from '@formkit/auto-animate/vue'
-import {Button} from '@/components/ui/button'
 import {FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage,} from '@/components/ui/form'
 import {Input} from '@/components/ui/input'
 import type {Company} from "PrismaTypes";
 import {Building2} from 'lucide-vue-next'
 import { User } from 'lucide-vue-next'
 import { Mail} from 'lucide-vue-next'
-import { LockKeyhole } from 'lucide-vue-next'
+  import { LockKeyhole } from 'lucide-vue-next'
 
 
 const {$api} = useNuxtApp()

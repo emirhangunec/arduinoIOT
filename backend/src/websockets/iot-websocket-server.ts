@@ -18,6 +18,7 @@ wss.on("connection", (ws: IotWebSocket, request) => {
     ws.on("message", async function message(data, isBinary) {
         const parsedData = data.toString();
         const [key, value] = parsedData.split(":");
+        ws.lastPing = Date.now();
         switch (key) {
             case "id":
                 ws.id = value;
@@ -27,9 +28,7 @@ wss.on("connection", (ws: IotWebSocket, request) => {
                 eventHandler.emit("online-device-ids", Array.from(onlineClientIds));
                 break;
             case "ping":
-                ws.lastPing = Date.now();
                 break;
-
             case "window":
                 ws.window = parseInt(value) === 1;
                 if (ws.id === undefined) return;
