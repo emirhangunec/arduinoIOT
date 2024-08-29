@@ -21,6 +21,7 @@ router.get("/:id", async (req, res) => {
 
 });
 
+
 router.get("/", async (req, res) => {
     const requiredPrivileges = ['device.read', 'room.all.create'];
     if (!req.user) return res.status(401).json({message: 'unauthorized'});
@@ -34,6 +35,5 @@ router.get("/", async (req, res) => {
         data: devices
     });
 });
-
 
 export default router;

@@ -11,9 +11,8 @@ definePageMeta({
   }
 })
 
-const user = useAuthStore()
-
 const {$api} = useNuxtApp()
+
 const data = ref({
   name: '',
   doorNumber: '',
@@ -66,7 +65,6 @@ const addOpenHourSection = (day: number) => {
   const now =new Date()
   openHours.value[day].push({dayOfWeek: day, openHour: getHoursAndMinutes(now), closeHour: getHoursAndMinutes(now)})
 }
-
 const getHoursAndMinutes = (date: Date) => {
   const hours = date.getHours().toString().padStart(2, '0')
   const minutes = date.getMinutes().toString().padStart(2, '0')
@@ -82,7 +80,6 @@ const getHoursAndMinutes = (date: Date) => {
 
   return `${hours}:${minutes}`
 }
-
 const setHoursAndMinutes = (time?: string) => {
   const date = new Date()
   if (!time) return date

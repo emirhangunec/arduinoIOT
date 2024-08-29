@@ -11,6 +11,8 @@ interface IotWebSocket extends WebSocket {
     lastPing: number | undefined;
     ip: string | undefined;
     window: boolean | undefined;
+    electricity: boolean | undefined;
+    heating: boolean | undefined;
 }
 
 wss.on("connection", (ws: IotWebSocket, request) => {
@@ -31,9 +33,19 @@ wss.on("connection", (ws: IotWebSocket, request) => {
             case "ping":
                 break;
             case "window":
-                ws.window = parseInt(value) === 1;
                 if (ws.id === undefined) return;
+                ws.window = parseInt(value) === 1;
                 eventHandler.emit("window-status", {id: ws.id, window: ws.window});
+                break;
+            case "electricity":
+                if (ws.id === undefined) return;
+                ws.electricity = parseInt(value) === 1;
+                eventHandler.emit("electricity-status", {id: ws.id, electricityStatus: ws.electricity});
+                break;
+            case "heating":
+                if (ws.id === undefined) return;
+                ws.heating = parseInt(value) === 1;
+                eventHandler.emit("heating-status", {id: ws.id, heatingStatus: ws.heating});
                 break;
             default:
                 console.log(`user sended:${parsedData}`);
@@ -82,6 +94,25 @@ setInterval(() => {
         }
     })
 }, 5000)
+
+
+eventHandler.on("toggle-electricity", async (data: { deviceId: string, electricityStatus: boolean }) => {
+    wss.clients.forEach((client) => {
+        const ws = client as IotWebSocket;
+        if (ws.id === data.deviceId) {
+            ws.send(`electricity:${data.electricityStatus ? 1 : 0}`);
+        }
+    });
+})
+
+eventHandler.on("toggle-heating", async (data: { deviceId: string, heatingStatus: boolean }) => {
+    wss.clients.forEach((client) => {
+        const ws = client as IotWebSocket;
+        if (ws.id === data.deviceId) {
+            ws.send(`heating:${data.heatingStatus ? 1 : 0}`);
+        }
+    });
+})
 
 
 export default wss;

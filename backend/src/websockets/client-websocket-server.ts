@@ -17,14 +17,74 @@ eventHandler.on('online-device-ids', async (deviceIds: string[]) => {
     });
 })
 
+eventHandler.on('window-status', async (data: {
+    id: string,
+    window: boolean
+}) => {
+
+    wss.clients.forEach((client) => {
+        client.send(JSON.stringify({
+            eventName: 'window-status',
+            data
+        }))
+    });
+
+})
+
+eventHandler.on('electricity-status', async (data: {
+    id: string,
+    electricityStatus: boolean
+}) => {
+    wss.clients.forEach((client) => {
+        client.send(JSON.stringify({
+            eventName: 'electricity-status',
+            data
+        }))
+    });
+})
+
+eventHandler.on('heating-status', async (data: {
+    id: string,
+    heatingStatus: boolean
+}) => {
+    wss.clients.forEach((client) => {
+        client.send(JSON.stringify({
+            eventName: 'heating-status',
+            data
+        }))
+    });
+})
+
 wss.on('connection', (ws: WebSocket, request) => {
     ws.on('message', (message: string, isBinary) => {
-        console.log(message);
+            const parsedMessage = message.toString();
+            const data = JSON.parse(parsedMessage);
+            switch (data.eventName) {
+                case 'toggle-electricity':
+                    eventHandler.emit('toggle-electricity', {
+                            deviceId: data.deviceId,
+                            electricityStatus: data.electricityStatus
+                        }
+                    );
+                    break;
+                case 'toggle-heating':
+                    eventHandler.emit('toggle-heating', {
+                            deviceId: data.deviceId,
+                            heatingStatus: data.heatingStatus
+                        }
+                    );
+                    break;
+                default:
+                    console.log(`[WS] Message: ` + JSON.stringify(data));
+                    break
+            }
+        }
+    )
+        ;
+
+        ws.on('close', () => {
+            console.log('Client disconnected');
+        });
     });
 
-    ws.on('close', () => {
-        console.log('Client disconnected');
-    });
-});
-
-export default wss;
+    export default wss;

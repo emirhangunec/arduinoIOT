@@ -8,6 +8,20 @@ const router = express.Router();
 
 router.use(authMiddleware)
 
+router.delete("/:id", async (req, res) => {
+    const requiredPrivileges = ['room.all.delete'];
+    const requestingUser = req.user;
+    if (!requestingUser) return res.status(403).json({message: "Unauthorized"});
+    const hasPrivileges = canAction(requestingUser, requiredPrivileges);
+    if (!hasPrivileges) return res.status(403).json({message: "Unauthorized"});
+    const {id} = req.params;
+    const room = await db.room.delete({where: {id}});
+    return res.json({
+        message: "Room deleted",
+        data: room
+    });
+});
+
 router.get("/:id", async (req, res) => {
     const requiredPrivileges = ['room.all.read', 'room.user.read'];
     const requestingUser = req.user;
@@ -15,7 +29,7 @@ router.get("/:id", async (req, res) => {
     const hasPrivileges = requestingUser.role.privileges.some(privilege => requiredPrivileges.includes(privilege.name));
     if (!hasPrivileges) return res.status(403).json({message: "Unauthorized"});
     const {id} = req.params;
-    const room = await db.room.findUnique({where: {id}, include: {openHours: true}});
+    const room = await db.room.findUnique({where: {id}, include: {users: true, device: true, openHours: true}}) as RoomWithOpenHoursAndDeviceAndUsers;
     if (!room) {
         return res.status(404).json({error: "Room not found"});
     }

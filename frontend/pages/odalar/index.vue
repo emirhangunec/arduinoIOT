@@ -15,6 +15,7 @@ definePageMeta({
 const user = useAuthStore()
 const requestUrl = `rooms?${user.can('room.all.read') ? 'all=true' : 'user=true'}`
 
+const {$api} = useNuxtApp()
 const {data: rooms, status, error, refresh} = useApi<ApiResponse<RoomWithOpenHoursAndDeviceAndUsers[]>>(requestUrl)
 
 const userCanDoAnyAction = computed(() => user.canOr(['room.all.update', 'room.all.delete', 'room.user.update', 'room.user.delete']))
@@ -45,6 +46,41 @@ const initFilter = () => {
 const filters = ref<any>({})
 initFilter()
 
+const confirmPopup = useConfirm()
+const toast = useToast()
+const confirmDeletion = (event: MouseEvent, room: RoomWithOpenHoursAndDeviceAndUsers) => {
+  if (!event.currentTarget) return
+  confirmPopup.require({
+    target: event.currentTarget as HTMLElement,
+    message: `${room.name} isimli odayi silmek istediğinize emin misiniz?`,
+    icon: 'pi pi-exclamation-triangle',
+    rejectProps: {
+      label: 'Hayır',
+      severity: 'secondary'
+    },
+    acceptProps: {
+      label: 'Evet',
+      severity: 'danger'
+    },
+    accept: async () => {
+      const res = await $api(`rooms/${room.id}`, {
+        method: 'DELETE',
+      })
+      await refresh()
+      toast.add({
+        severity: 'success',
+        summary: `${room.name} isimli oda silindi`,
+        life: 5000
+      })
+    }
+  })
+}
+
+onMounted(() => {
+  setInterval(() => {
+    refresh()
+  }, 10000)
+})
 </script>
 
 <template>
@@ -118,7 +154,7 @@ initFilter()
     <Column sortable field="device.isOnline" header="Cihaz">
       <template #body="{data}">
         <div v-if="data.device" class="items-center justify-center flex gap-2">
-          <span  :class="cn(
+          <span :class="cn(
               data.device.isOnline? 'text-green-500': 'text-red-500'
           )">
             {{ data.device.isOnline ? 'Aktif' : 'Pasif' }}
@@ -135,8 +171,11 @@ initFilter()
     <Column v-if="userCanDoAnyAction" header="İşlemler">
       <template #body="{data}">
         <div class="flex gap-2">
-          <Button icon="pi pi-pencil" severity="info" v-if="user.can('room.all.update')"/>
-          <Button icon="pi pi-trash" severity="danger" v-if="user.can('room.all.delete')"/>
+          <Button icon="pi pi-eye" severity="info" v-if="user.can('room.all.read')" @click="navigateTo(`/odalar/${data.id}`)"/>
+          <Button icon="pi pi-pencil" severity="warn" v-if="user.can('room.all.update')" @click="navigateTo(`/odalar/${data.id}/duzenle`)" />
+          <Button icon="pi pi-trash" severity="danger" v-if="user.can('room.all.delete')"
+                  @click="confirmDeletion($event,data)"/>
+          <ConfirmPopup></ConfirmPopup>
         </div>
       </template>
     </Column>
