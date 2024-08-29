@@ -24,6 +24,17 @@ export default defineNuxtConfig({
                     cssLayer: false
                 }
             },
+            // @ts-expect-error
+            locale: {
+                startsWith: 'Başlayan',
+                contains: 'İçeren',
+                notContains: 'İçermeyen',
+                endsWith: 'Biten',
+                equals: 'Eşit',
+                notEquals: 'Eşit Değil',
+                apply: 'Uygula',
+                clear: 'Temizle',
+            }
 
         },
 

@@ -2,6 +2,7 @@ import express from "express";
 import db, {UserWithRoleAndPrivileges} from "db";
 import authMiddleware from "../middlewares/auth-middleware";
 import {hashPassword} from "@/bcrypt";
+import {canAction} from "@/helpers/utils";
 
 
 const router = express.Router();
@@ -9,11 +10,10 @@ const router = express.Router();
 router.use(authMiddleware)
 
 router.get('/', async (req, res) => {
-    const requiredPrivileges = ['user.read'];
+    const requiredPrivileges = ['user.read','room.all.create'];
     if (!req.user) return res.status(401).json({message: 'unauthorized'});
 
-    const requestingUserPrivileges = req.user.role.privileges.map(p => p.name);
-    const hasPrivileges = requiredPrivileges.every(p => requestingUserPrivileges.includes(p));
+    const hasPrivileges = canAction(req.user, requiredPrivileges);
     if (!hasPrivileges) return res.status(403).json({message: 'forbidden'});
 
     const users = await db.user.findMany({

@@ -70,10 +70,10 @@ model Room {
 
 model OpenHour {
   id        String @id @default(cuid())
-  dayOfWeek String
+  dayOfWeek Int
   openHour  String
   closeHour String
 
-  roomId String @unique
+  roomId String
   room   Room   @relation(fields: [roomId], references: [id])
 }

@@ -1,8 +1,12 @@
-import { type DeviceWithRoomAndOpenHours} from "PrismaTypes";
+import {type DeviceWithRoomAndOpenHours} from "PrismaTypes";
 
-export const useRoomsStore = defineStore('rooms', () => {
+export const useDevicesStore = defineStore('rooms', () => {
     const {$socket, $api} = useNuxtApp()
     const devices = ref<DeviceWithRoomAndOpenHours[]>([])
+
+    watch(devices, (newDevices) => {
+
+    })
 
     $socket.onmessage = (event) => {
         const data = JSON.parse(event.data)

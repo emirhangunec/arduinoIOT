@@ -24,6 +24,7 @@ wss.on("connection", (ws: IotWebSocket, request) => {
                 ws.id = value;
                 if (ws.ip === undefined) return;
                 const res = await updateOrCreateDevice(ws.id, ws.ip, true);
+                console.log(res);
                 onlineClientIds.add(ws.id);
                 eventHandler.emit("online-device-ids", Array.from(onlineClientIds));
                 break;

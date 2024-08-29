@@ -22,6 +22,12 @@ export interface RoomWithOpenHours extends Room {
     openHours: OpenHour[]
 }
 
+export interface RoomWithOpenHoursAndDevice extends RoomWithOpenHours {
+    device: Device | null
+}
+export interface RoomWithOpenHoursAndDeviceAndUsers extends RoomWithOpenHoursAndDevice {
+    users: UserWithRoleAndPrivileges[]
+}
 export interface RoleWithPrivileges extends Role {
     privileges: Privilege[]
 }

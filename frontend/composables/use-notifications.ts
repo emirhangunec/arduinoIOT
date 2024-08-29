@@ -1,7 +1,8 @@
 import type {ToastMessageOptions} from "primevue/toast";
+import {useDevicesStore} from "~/stores/devices-store";
 
 export function useNotifications() {
-    const roomStore = useRoomsStore()
+    const roomStore = useDevicesStore()
     const toast = useToast()
     const notificationsShowedOnToast = useLocalStorage<ToastMessageOptions[]>('notificationsShowedOnToast', [])
     const notificationsMarkedAsRead = useLocalStorage<ToastMessageOptions[]>('notificationsMarkedAsRead', [])

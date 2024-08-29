@@ -123,6 +123,6 @@ app.post('/login', async (req, res) => {
 app.use('/users', usersRouter);
 app.use('/privileges', privilegesRouter);
 app.use('/roles', rolesRouter);
-app.use('/device', deviceRouter);
+app.use('/devices', deviceRouter);
 app.use('/rooms', roomsRouter);
 export default app;
