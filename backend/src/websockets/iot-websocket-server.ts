@@ -1,5 +1,5 @@
 import WebSocket, {WebSocketServer} from "ws";
-import {updateDevice, updateOrCreateDevice} from "@/helpers/device";
+import {makeAllDevicesOffline, updateDevice, updateOrCreateDevice} from "@/helpers/device";
 import eventHandler from "@/events";
 
 const onlineClientIds = new Set<string>();
@@ -48,7 +48,7 @@ wss.on("connection", (ws: IotWebSocket, request) => {
     });
 });
 
-setInterval(() => {
+setInterval(async () => {
 // test data, development only
 //     if (onlineClientIds.size === 0) {
 //         const fakeDataId = '1'
@@ -57,6 +57,10 @@ setInterval(() => {
 //     else{
 //         onlineClientIds.delete('1')
 //     }
+
+    if (onlineClientIds.size === 0) {
+        await makeAllDevicesOffline();
+    }
     eventHandler.emit("online-device-ids", Array.from(onlineClientIds));
 }, 5000)
 

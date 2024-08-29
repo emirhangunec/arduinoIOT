@@ -40,3 +40,14 @@ export async function getDeviceWithRoomAndOpenHours(deviceId: string): Promise<D
         }
     })
 }
+
+export async function makeAllDevicesOffline(): Promise<void> {
+    await db.device.updateMany({
+        where:{
+            isOnline: true
+        },
+        data: {
+            isOnline: false
+        }
+    });
+}
