@@ -93,6 +93,97 @@ router.get("/", async (req, res) => {
 
 });
 
+router.put("/:id", async (req, res) => {
+    const requiredPrivileges = ['room.all.update', 'room.user.update'];
+    const requestingUser = req.user;
+    if (!requestingUser) return res.status(403).json({message: "Unauthorized"});
+
+    const hasPrivileges = canAction(requestingUser, requiredPrivileges);
+    if (!hasPrivileges) return res.status(403).json({message: "Unauthorized"});
+
+    const {id} = req.params;
+    const room = await db.room.findUnique({where: {id}, include: {users: true,device: true, openHours: true}});
+    if (!room) {
+        return res.status(404).json({message: "Room not found"});
+    }
+    if (!canAction(requestingUser, 'room.all.update')) {
+        if (!room?.users.find(user => user.id === requestingUser.id)) {
+            return res.status(403).json({message: "Unauthorized"});
+        }
+    }
+
+    const {name, doorNumber, floor, sector, openHours, deviceId, userIds} = req.body;
+
+//     remove existing users and connect new ones
+    if (userIds) {
+        await db.room.update({
+            where: {id},
+            data: {
+                users: {
+                    disconnect: room.users.map(user => ({id: user.id})),
+                    connect: userIds.map((id: string) => ({id}))
+                }
+            }
+        });
+    }
+
+//     remove existing open hours and create new ones
+    if(openHours){
+        await db.openHour.deleteMany({where: {roomId: id}});
+        await db.openHour.createMany({
+            data: openHours.map((hour: any) => ({...hour, roomId: id}))
+        });
+    }
+
+    // remove existing device and connect new one
+    if (deviceId) {
+        await db.room.update({
+            where: {id},
+            data: {
+                device: {
+                    disconnect: room.device ? {id: room.device.id} : undefined,
+                    connect: {id: deviceId}
+                }
+            }
+        });
+    }
+
+    // some data can be undefined, so we need to check if it is defined
+    const dataToUpdate = {
+        name: name ?? undefined,
+        doorNumber: doorNumber ?? undefined,
+        floor: floor ?? undefined,
+        sector: sector ?? undefined
+    }
+
+    const updatedRoom = await db.room.update({
+        where: {id},
+        data: dataToUpdate,
+        include: {
+            openHours: true,
+            device: true,
+            users: {
+                include: {
+                    role: {
+                        include: {
+                            privileges: true
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    return res.json({
+        message: "Room updated",
+        data: updatedRoom
+    });
+
+
+
+})
+
+
 router.post("/", async (req, res) => {
     const requiredPrivileges = ['room.all.create'];
     const requestingUser = req.user;

@@ -114,5 +114,12 @@ eventHandler.on("toggle-heating", async (data: { deviceId: string, heatingStatus
     });
 })
 
+eventHandler.on("send-data-to-device", async (data: { deviceId: string, data: { heater: boolean, electricity: boolean } }) => {
+    eventHandler.emit("toggle-electricity", {deviceId: data.deviceId, electricityStatus: data.data.electricity});
+    await new Promise(resolve => setTimeout(resolve, 10000));
+    eventHandler.emit("toggle-heating", {deviceId: data.deviceId, heatingStatus: data.data.heater});
+
+})
+
 
 export default wss;

@@ -22,7 +22,7 @@ model Device {
   hasElectricityControl Boolean @default(false)
 
   roomId String? @unique
-  room   Room?   @relation(fields: [roomId], references: [id],onDelete: SetNull)
+  room   Room?   @relation(fields: [roomId], references: [id], onDelete: SetNull)
 }
 
 model Company {
@@ -69,11 +69,13 @@ model Room {
 }
 
 model OpenHour {
-  id        String @id @default(cuid())
-  dayOfWeek Int
-  openHour  String
-  closeHour String
+  id              String  @id @default(cuid())
+  dayOfWeek       Int
+  openHour        String
+  closeHour       String
+  isElectricityOn Boolean @default(false)
+  isHeaterOn      Boolean @default(false)
+  roomId          String
+  room            Room    @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
-  roomId String
-  room   Room   @relation(fields: [roomId], references: [id], onDelete: Cascade)
 }

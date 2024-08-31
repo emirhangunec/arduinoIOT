@@ -7,12 +7,11 @@ definePageMeta({
   layout: 'admin-layout',
   middleware: to => {
     const user = useAuthStore()
-    if (!user.can('room.all.read')){
-      if (!user.can('room.user.read')){
+    if (!user.can('room.all.read')) {
+      if (!user.can('room.user.read')) {
         return navigateTo('/?message=no_permission')
-      }
-      else{
-        if (!room.value?.data.users.find(u => u.id === user.user?.id)){
+      } else {
+        if (!room.value?.data.users.find(u => u.id === user.user?.id)) {
           return navigateTo('/?message=no_permission')
         }
       }
@@ -20,7 +19,11 @@ definePageMeta({
   }
 })
 
-const {data: room, status} = useApi<ApiResponse<RoomWithOpenHoursAndDeviceAndUsers>>(`rooms/${route.params.id}`)
+const {
+  data: room,
+  status,
+  refresh
+} = useApi<ApiResponse<RoomWithOpenHoursAndDeviceAndUsers>>(`rooms/${route.params.id}`)
 
 watch(status, (status) => {
   if (status === 'success' && room.value?.data) {
@@ -30,13 +33,39 @@ watch(status, (status) => {
     data.value.sector = room.value.data.sector ?? ''
     data.value.deviceId = room.value.data.device?.id ?? null
     data.value.userIds = room.value.data.users.map(u => u.id) ?? []
+    deviceDataToUpdate.value.electricity = room.value.data.device?.hasElectricityControl ?? false
+    deviceDataToUpdate.value.heating = room.value.data.device?.hasHeaterControl ?? false
+    deviceDataToUpdate.value.windowSensor = room.value.data.device?.hasWindowSensor ?? false
+
+    controlOptions.value = []
+    if (room.value.data.device) {
+      if (room.value.data.device.hasElectricityControl) {
+        controlOptions.value.push({label: 'Elektrik', value: 'electricity'})
+      }
+      if (room.value.data.device.hasHeaterControl) {
+        controlOptions.value.push({label: 'Isi', value: 'heating'})
+      }
+      // if (room.value.data.device.hasWindowSensor) {
+      //   controlOptions.value.push({label: 'Pencere Sensoru', value: 'windowSensor'})
+      // }
+    }
     openHours.value = room.value.data.openHours.reduce((acc, curr) => {
+      const controls = []
+      if (curr.isElectricityOn) {
+        controls.push('electricity')
+      }
+      if (curr.isHeaterOn) {
+        controls.push('heating')
+      }
       // @ts-ignore
-      acc[curr.dayOfWeek].push(curr)
+      acc[curr.dayOfWeek].push({
+        ...curr,
+        controls
+      })
       return acc
     }, [[], [], [], [], [], [], []])
   }
-},{
+}, {
   immediate: true
 })
 
@@ -49,6 +78,7 @@ const data = ref({
   sector: '',
   deviceId: null as string | null,
   userIds: [] as string[],
+  controls: [] as ('electricity' | 'heating')[]
 })
 const {data: users} = useApi<ApiResponse<UserWithRoleAndPrivileges[]>>('users')
 const {data: devices} = useApi<ApiResponse<DeviceWithRoom[]>>('devices')
@@ -63,6 +93,13 @@ const deviceOptions = computed(() => devices.value?.data.map(d => ({
   value: d.id
 })) || [])
 
+const controlOptions = ref<{ label: string, value: string }[]>([])
+
+const deviceDataToUpdate = ref({
+  electricity: false,
+  heating: false,
+  windowSensor: false,
+})
 const getDayName = (day: number) => {
   switch (day) {
     case 0:
@@ -82,17 +119,22 @@ const getDayName = (day: number) => {
   }
 }
 const openHours = ref([
-  [] as { dayOfWeek: number, openHour: string, closeHour: string }[],
-  [] as { dayOfWeek: number, openHour: string, closeHour: string }[],
-  [] as { dayOfWeek: number, openHour: string, closeHour: string }[],
-  [] as { dayOfWeek: number, openHour: string, closeHour: string }[],
-  [] as { dayOfWeek: number, openHour: string, closeHour: string }[],
-  [] as { dayOfWeek: number, openHour: string, closeHour: string }[],
-  [] as { dayOfWeek: number, openHour: string, closeHour: string }[],
+  [] as { dayOfWeek: number, openHour: string, closeHour: string, controls: string[] }[],
+  [] as { dayOfWeek: number, openHour: string, closeHour: string, controls: string[] }[],
+  [] as { dayOfWeek: number, openHour: string, closeHour: string, controls: string[] }[],
+  [] as { dayOfWeek: number, openHour: string, closeHour: string, controls: string[] }[],
+  [] as { dayOfWeek: number, openHour: string, closeHour: string, controls: string[] }[],
+  [] as { dayOfWeek: number, openHour: string, closeHour: string, controls: string[] }[],
+  [] as { dayOfWeek: number, openHour: string, closeHour: string, controls: string[] }[],
 ])
 const addOpenHourSection = (day: number) => {
-  const now =new Date()
-  openHours.value[day].push({dayOfWeek: day, openHour: getHoursAndMinutes(now), closeHour: getHoursAndMinutes(now)})
+  const now = new Date()
+  openHours.value[day].push({
+    dayOfWeek: day,
+    openHour: getHoursAndMinutes(now),
+    closeHour: getHoursAndMinutes(now),
+    controls: [] as string[]
+  })
 }
 const getHoursAndMinutes = (date: Date) => {
   const hours = date.getHours().toString().padStart(2, '0')
@@ -120,17 +162,25 @@ const setHoursAndMinutes = (time?: string) => {
 
 const toast = useToast()
 const handleSubmit = async () => {
+  const roomId = room.value?.data.id
+  if (!roomId) return
   console.log({
     data: data.value,
     openHours: openHours.value.flat()
   })
-
   try {
-    const res = await $api<ApiResponse<RoomWithOpenHoursAndDeviceAndUsers>>('rooms', {
-      method: 'POST',
+    const _openHours = openHours.value.flat().map(o => ({
+      dayOfWeek: o.dayOfWeek,
+      openHour: o.openHour,
+      closeHour: o.closeHour,
+      isElectricityOn: o.controls.includes('electricity'),
+      isHeaterOn: o.controls.includes('heating'),
+    }))
+    const res = await $api<ApiResponse<RoomWithOpenHoursAndDeviceAndUsers>>(`rooms/${roomId}`, {
+      method: 'PUT',
       body: {
         ...data.value,
-        openHours: openHours.value.flat()
+        openHours: _openHours
       }
     })
 
@@ -145,21 +195,55 @@ const handleSubmit = async () => {
       toast.add({
         severity: 'success',
         summary: 'Basarili',
-        detail: 'Oda basariyla eklendi',
+        detail: 'Oda basariyla duzenlenid',
         life: 5000
       })
-      navigateTo('/odalar')
     }
-  }
-  catch (e) {
+  } catch (e) {
     toast.add({
       severity: 'error',
       summary: 'Hata',
-      detail: 'Oda eklenirken bir hata olustu, lutfen yonetici ile iletisime geciniz',
+      detail: 'Oda duzenlenirken bir hata olustu, lutfen yonetici ile iletisime geciniz',
       life: 10000
     })
   }
 }
+
+const editDeviceSubmit = async () => {
+  const deviceId = room.value?.data.device?.id
+  if (!deviceId) return
+  const data = {
+    hasElectricityControl: deviceDataToUpdate.value.electricity,
+    hasHeaterControl: deviceDataToUpdate.value.heating,
+    hasWindowSensor: deviceDataToUpdate.value.windowSensor
+  }
+
+  const res = await $api<ApiResponse<DeviceWithRoom>>(`devices/${deviceId}`, {
+    method: 'PUT',
+    body: data
+  })
+
+  console.log(res)
+
+  if (!res.error) {
+    toast.add({
+      severity: 'success',
+      summary: 'Basarili',
+      detail: 'Cihaz basariyla duzenlendi',
+      life: 5000
+    })
+  } else {
+    toast.add({
+      severity: 'error',
+      summary: 'Hata',
+      detail: res.error,
+      life: 10000
+    })
+  }
+  refresh()
+  isEditDeviceDialogVisible.value = false
+}
+const isEditDeviceDialogVisible = ref(false)
 </script>
 
 <template>
@@ -200,12 +284,51 @@ const handleSubmit = async () => {
                        option-label="label" option-value="value" filter class="w-full"/>
           <label for="userIds">Yetkili Kullanicilar</label>
         </FloatLabel>
+        <div class="w-full flex items-center justify-stretch gap-2 ">
 
-        <FloatLabel class="w-full">
-          <Select id="deviceId" v-model="data.deviceId" :loading="!deviceOptions.length" :options="deviceOptions"
-                  option-label="label" option-value="value" filter class="w-full"/>
-          <label for="deviceId">Cihaz</label>
-        </FloatLabel>
+          <FloatLabel class="w-full">
+            <Select id="deviceId" v-model="data.deviceId" :loading="!deviceOptions.length" :options="deviceOptions"
+                    option-label="label" option-value="value" filter class="w-full"/>
+            <label for="deviceId">Cihaz</label>
+          </FloatLabel>
+
+          <Button
+              icon="pi pi-pencil"
+              severity="info"
+              @click="isEditDeviceDialogVisible = true"
+              v-if="data.deviceId && room.data.device"
+          />
+        </div>
+        <Dialog v-model:visible="isEditDeviceDialogVisible" v-if="room.data?.device" modal header="Cihazi Duzenle"
+                :style="{ width: '25rem' }">
+          <span class="text-surface-500 dark:text-surface-400 block mb-8">
+            Cihaz bilgilerini duzenleyebilirsiniz
+            <br>
+            <span>
+              IP:
+              {{ room.data.device.ip.split('::ffff:')[1] }}
+            </span>
+          </span>
+          <div class="flex flex-col gap-4 mb-8">
+            <div class="flex w-full justify-between items-center gap-2">
+              <Label for="electricity">Elektrik Kontrolu</Label>
+              <ToggleButton v-model="deviceDataToUpdate.electricity" onLabel="Var" offLabel="Yok"/>
+            </div>
+            <div class="flex w-full justify-between items-center gap-2">
+              <Label for="heating">Isi Kontrolu</Label>
+              <ToggleButton v-model="deviceDataToUpdate.heating" onLabel="Var" offLabel="Yok"/>
+            </div>
+            <div class="flex w-full justify-between items-center gap-2">
+              <Label for="windowSensor">Pencere Sensoru</Label>
+              <ToggleButton v-model="deviceDataToUpdate.windowSensor" onLabel="Var" offLabel="Yok"/>
+            </div>
+          </div>
+          <div class="flex justify-end gap-2">
+            <Button type="button" label="Vazgec" severity="secondary"
+                    @click="isEditDeviceDialogVisible = false"></Button>
+            <Button type="button" label="Kaydet" @click="editDeviceSubmit"></Button>
+          </div>
+        </Dialog>
       </div>
       <div class="grid grid-cols-7">
         <div v-for="index in 7" class="flex flex-col border border-r-0" :class="cn(
@@ -234,6 +357,22 @@ const handleSubmit = async () => {
                     inputId="close_hour" time-only fluid/>
                 <label for="close_hour">Bitis </label>
               </FloatLabel>
+              <FloatLabel>
+                <label for="controls">Sec</label>
+                <MultiSelect
+                    id="controls"
+                    v-model="openHours[index - 1][hourSetIndex].controls"
+                    class="!truncate w-full"
+                    :options="controlOptions"
+                    option-label="label"
+                    option-value="value"
+                    filter
+                    :max-selected-labels="0"
+                    selected-items-label="{0}"
+                    placeholder="sec"
+                />
+              </FloatLabel>
+
             </div>
             <Button severity="danger" class="!h-full !px-2" icon="pi pi-trash"
                     @click="openHours[index - 1].splice(hourSetIndex, 1)"/>
@@ -253,7 +392,7 @@ const handleSubmit = async () => {
       <p>Loading...</p>
     </div>
     <div v-else-if="status === 'error' && room?.error">
-      <p>Error: {{room.error}}</p>
+      <p>Error: {{ room.error }}</p>
     </div>
   </div>
 </template>
