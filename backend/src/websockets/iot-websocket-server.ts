@@ -21,12 +21,14 @@ wss.on("connection", (ws: IotWebSocket, request) => {
         const parsedData = data.toString();
         const [key, value] = parsedData.split(":");
         ws.lastPing = Date.now();
+        // console.log(`received: ${parsedData}`);
         switch (key) {
             case "id":
                 ws.id = value;
                 if (ws.ip === undefined) return;
                 const res = await updateOrCreateDevice(ws.id, ws.ip, true);
-                console.log(res);
+                // console.log(res);
+                eventHandler.emit("device-connected", ws.id);
                 onlineClientIds.add(ws.id);
                 eventHandler.emit("online-device-ids", Array.from(onlineClientIds));
                 break;
@@ -79,13 +81,25 @@ setInterval(async () => {
 setInterval(() => {
     wss.clients.forEach((ws: WebSocket) => {
         const client = ws as IotWebSocket;
-        if (client.readyState !== WebSocket.OPEN
-            || client.lastPing === undefined
-            || client.id === undefined) {
-            console.log("client terminated");
-            client.terminate()
-            if (client.id === undefined) return;
-            onlineClientIds.delete(client.id)
+        // if (client.readyState !== WebSocket.OPEN
+        //     || client.lastPing === undefined
+        //     || client.id === undefined) {
+        //     console.log("client terminated", client.id, client.readyState, client.lastPing, client);
+        //     client.terminate()
+        //     if (client.id === undefined) return;
+        //     onlineClientIds.delete(client.id)
+        //     return;
+        // }
+        if (client.readyState !== WebSocket.OPEN) {
+            // console.log('client not ready', client.readyState);
+            return;
+        }
+        if (client.lastPing === undefined) {
+            // console.log('client last ping not defined');
+            return;
+        }
+        if (client.id === undefined) {
+            // console.log('client id not defined');
             return;
         }
         if (client.lastPing < Date.now() - 30000) {
@@ -114,7 +128,10 @@ eventHandler.on("toggle-heating", async (data: { deviceId: string, heatingStatus
     });
 })
 
-eventHandler.on("send-data-to-device", async (data: { deviceId: string, data: { heater: boolean, electricity: boolean } }) => {
+eventHandler.on("send-data-to-device", async (data: {
+    deviceId: string,
+    data: { heater: boolean, electricity: boolean }
+}) => {
     eventHandler.emit("toggle-electricity", {deviceId: data.deviceId, electricityStatus: data.data.electricity});
     await new Promise(resolve => setTimeout(resolve, 10000));
     eventHandler.emit("toggle-heating", {deviceId: data.deviceId, heatingStatus: data.data.heater});

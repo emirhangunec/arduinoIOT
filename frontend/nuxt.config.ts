@@ -48,7 +48,7 @@ export default defineNuxtConfig({
     },
     vite: {
         optimizeDeps: {
-            exclude: ['jwt-decode']
+            exclude: ['jwt-decode','exceljs']
         }
     },
     shadcn: {

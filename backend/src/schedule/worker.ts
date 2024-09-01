@@ -6,6 +6,46 @@ interface Schedule extends OpenHour {
     isClosingDoneForToday: boolean
 }
 
+eventHandler.on('device-connected', async (deviceId: string) => {
+    console.log("Device connected", deviceId)
+    console.log('we should check if this device is in the open hours')
+    const device = await db.device.findUnique({
+        where: {id: deviceId}
+    })
+    if (!device) {
+        return
+    }
+
+    const relatedOpenHours = openHours.filter(openHour => openHour.roomId === device.roomId)
+    if (!relatedOpenHours.length) {
+        return
+    }
+
+    const now = fixDate()
+    const dayOfWeek = getDayOfWeek(now)
+    const todayOpenHours = relatedOpenHours.filter(openHour => openHour.dayOfWeek === dayOfWeek)
+
+    if (!todayOpenHours.length) {
+        return
+    }
+
+    const shouldRanOpenings = todayOpenHours.filter(openHour => isBetween(now, openHour.openHour, openHour.closeHour))
+
+    if (!shouldRanOpenings.length) {
+        return
+    }
+
+    console.log("new device connected, should be running on this schedule now, handling.", shouldRanOpenings)
+    shouldRanOpenings.forEach((openHour) => {
+    //     should run beetween 1second delay
+        setTimeout(() => {
+            handleOpening(openHour)
+        }, 1000)
+    })
+
+})
+
+
 let openHours = [] as Schedule[]
 const fixDate = (date?: Date) => {
     if (!date) {
@@ -31,6 +71,16 @@ const getOpenHours = async () => {
         isClosingDoneForToday: false
     }))
 
+}
+
+const isBetween = (now: Date, openHour: string, closeHour: string) => {
+    const [hour, minute] = openHour.split(":").map(Number)
+    const [closeHourHour, closeHourMinute] = closeHour.split(":").map(Number)
+
+    const isNowPastOpenHour = now.getUTCHours() > hour || (now.getUTCHours() === hour && now.getUTCMinutes() >= minute)
+    const isNowBeforeCloseHour = now.getUTCHours() < closeHourHour || (now.getUTCHours() === closeHourHour && now.getUTCMinutes() <= closeHourMinute)
+
+    return isNowPastOpenHour && isNowBeforeCloseHour
 }
 
 const compareTime = (openHour: string, now: Date) => {

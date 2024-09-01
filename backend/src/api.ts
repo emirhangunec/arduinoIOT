@@ -3,14 +3,15 @@ import db from "db";
 import cors from 'cors';
 import {comparePassword, hashPassword} from "./bcrypt";
 import jwt from 'jsonwebtoken';
+
 import usersRouter from "@/api/routers/users-router";
 import privilegesRouter from "@/api/routers/privileges-router";
 import rolesRouter from "@/api/routers/roles-router";
 import deviceRouter from "@/api/routers/device-router";
 import roomsRouter from "@/api/routers/rooms-router";
 
-const app = express();
 
+const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));

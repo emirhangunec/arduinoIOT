@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type {DeviceWithRoom, RoomWithOpenHoursAndDeviceAndUsers, UserWithRoleAndPrivileges} from "PrismaTypes";
 import {cn} from "~/lib/utils";
+import type {FileUploadUploaderEvent} from "primevue/fileupload";
 
 const route = useRoute()
 definePageMeta({
@@ -100,6 +101,13 @@ const deviceDataToUpdate = ref({
   heating: false,
   windowSensor: false,
 })
+
+interface SimpleOpenHour {
+  dayOfWeek: number
+  openHour: string
+  closeHour: string
+  controls: string[]
+}
 const getDayName = (day: number) => {
   switch (day) {
     case 0:
@@ -119,13 +127,13 @@ const getDayName = (day: number) => {
   }
 }
 const openHours = ref([
-  [] as { dayOfWeek: number, openHour: string, closeHour: string, controls: string[] }[],
-  [] as { dayOfWeek: number, openHour: string, closeHour: string, controls: string[] }[],
-  [] as { dayOfWeek: number, openHour: string, closeHour: string, controls: string[] }[],
-  [] as { dayOfWeek: number, openHour: string, closeHour: string, controls: string[] }[],
-  [] as { dayOfWeek: number, openHour: string, closeHour: string, controls: string[] }[],
-  [] as { dayOfWeek: number, openHour: string, closeHour: string, controls: string[] }[],
-  [] as { dayOfWeek: number, openHour: string, closeHour: string, controls: string[] }[],
+  [] as SimpleOpenHour[],
+  [] as SimpleOpenHour[],
+  [] as SimpleOpenHour[],
+  [] as SimpleOpenHour[],
+  [] as SimpleOpenHour[],
+  [] as SimpleOpenHour[],
+  [] as SimpleOpenHour[],
 ])
 const addOpenHourSection = (day: number) => {
   const now = new Date()
@@ -244,7 +252,59 @@ const editDeviceSubmit = async () => {
   isEditDeviceDialogVisible.value = false
 }
 const isEditDeviceDialogVisible = ref(false)
+
+const handleExport = async () => {
+  try {
+    const res = await $api<BlobPart>(`rooms/${route.params.id}/export`, {method: 'GET', responseType: 'blob'})
+    const url = window.URL.createObjectURL(new Blob([res]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `${route.params.id}.xlsx`);
+
+    // Linki tıklayıp dosyayı indirin
+    document.body.appendChild(link);
+    link.click();
+    link.parentNode?.removeChild(link);
+    console.log(res)
+  } catch (e) {
+    console.log(e)
+    toast.add(
+        {
+          severity: 'error',
+          summary: 'Hata',
+        }
+    )
+  }
+}
+
+const handleImport = async (event: FileUploadUploaderEvent) => {
+  const file = Array.isArray(event.files) ? event.files[0] : event.files;
+  const formData = new FormData()
+  formData.append('file', file);
+  const res = await $api<ApiResponse<SimpleOpenHour[]>>(`rooms/${route.params.id}/import`, {
+    method: 'POST',
+    body: formData,
+  })
+
+  if (!res?.data){
+    toast.add({
+      severity: 'error',
+      summary: 'Hata',
+      detail: res.error,
+      life: 10000
+    })
+    return
+  }
+
+  console.log(res.data)
+  openHours.value = res.data.reduce((acc, curr) => {
+    // @ts-ignore
+    acc[curr.dayOfWeek].push(curr)
+    return acc
+  }, [[], [], [], [], [], [], []])
+}
 </script>
+
 
 <template>
   <div class="p-4  w-full h-full">
@@ -254,7 +314,9 @@ const isEditDeviceDialogVisible = ref(false)
         <h3 class="font-bold text-2xl">
           {{ room.data.name }} isimli odayi duzenle
         </h3>
-        <Button label="Kaydet" icon="pi pi-save" @click="handleSubmit" class="p-button-success"/>
+        <div class="flex items-center gap-2">
+          <Button label="Kaydet" icon="pi pi-save" @click="handleSubmit" class="p-button-success"/>
+        </div>
       </div>
 
       <div class="grid grid-cols-2 gap-6 gap-y-10">
@@ -329,6 +391,16 @@ const isEditDeviceDialogVisible = ref(false)
             <Button type="button" label="Kaydet" @click="editDeviceSubmit"></Button>
           </div>
         </Dialog>
+      </div>
+      <div class="flex w-full items-center justify-between">
+        <h3 class="font-bold text-2xl">
+          Zaman Cizelgesini duzenle
+        </h3>
+        <div class="flex items-center gap-2">
+          <Button severity="secondary" label="Dışa Aktar" icon="pi pi-download" @click="handleExport" />
+          <FileUpload mode="basic" class="p-button-info" name="file" accept=".xlsx" :maxFileSize="1000000" custom-upload @uploader="handleImport"
+                      :auto="true" chooseLabel="İçe Aktar"/>
+        </div>
       </div>
       <div class="grid grid-cols-7">
         <div v-for="index in 7" class="flex flex-col border border-r-0" :class="cn(

@@ -23,8 +23,7 @@ const {data: room, status} = useApi<ApiResponse<RoomWithOpenHoursAndDeviceAndUse
 const deviceId = computed(() => room.value?.data.device?.id ?? '')
 const deviceStatus = computed(() => devicesStore.getDeviceStatus(deviceId.value))
 const toast = useToast()
-
-
+const {$api} = useNuxtApp()
 </script>
 
 <template>
@@ -38,7 +37,6 @@ const toast = useToast()
         <Button label="Duzenle" icon="pi pi-pencil" @click="navigateTo(`/odalar/${route.params.id}/duzenle`)"
         />
       </div>
-
       <div class="w-full flex flex-col gap-4" v-if="deviceId">
         <pre>
           {{ deviceStatus }}
