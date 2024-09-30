@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type {RoomWithOpenHoursAndDeviceAndUsers} from "PrismaTypes";
-import {getDayNameFromNumber} from "../../../../backend/src/helpers/utils";
 
 const route = useRoute()
 definePageMeta({
