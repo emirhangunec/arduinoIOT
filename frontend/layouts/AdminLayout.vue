@@ -27,11 +27,11 @@ const MENU_ITEMS = [
     icon: 'pi pi-lock',
     link: '/yetkiler',
   },
-  {
-    name: 'Cihazlar',
-    icon: 'pi pi-microchip',
-    link: '/cihazlar'
-  }
+  // {
+  //   name: 'Cihazlar',
+  //   icon: 'pi pi-microchip',
+  //   link: '/cihazlar'
+  // }
 ]
 
 const isMenuItemActive = (item: { link: string }) => {

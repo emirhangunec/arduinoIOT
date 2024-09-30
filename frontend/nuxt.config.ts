@@ -14,7 +14,7 @@ export default defineNuxtConfig({
         'PrismaTypes': '../backend/prisma/prisma.ts',
     },
     compatibilityDate: '2024-04-03',
-    devtools: {enabled: true},
+    devtools: {enabled: false},
     primevue: {
         options: {
             theme: {

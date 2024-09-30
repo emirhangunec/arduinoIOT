@@ -5,15 +5,17 @@ interface DeviceStatus {
     windowStatus: boolean
     electricityStatus: boolean
     heatingStatus: boolean
+    isBusy: boolean
 }
 
 export const useDevicesStore = defineStore('devices', () => {
     const {$socket, $api} = useNuxtApp()
     const devices = ref<DeviceWithRoomAndOpenHours[]>([])
+    const busyDevices = ref<{
+        deviceId: string
+        type: 'electricity' | 'heating'
+    }[]>([])
     const deviceStatus = ref<DeviceStatus[]>([])
-    const waitingResponseType = ref<null | 'electricity' | 'heating'>(null)
-
-    const isBusy = computed(() => waitingResponseType.value !== null)
     const toast = useToast()
 
     watch(devices, (newDevices) => {
@@ -25,7 +27,8 @@ export const useDevicesStore = defineStore('devices', () => {
                     deviceId: device.id,
                     windowStatus: false,
                     electricityStatus: false,
-                    heatingStatus: false
+                    heatingStatus: false,
+                    isBusy: busyDevices.value.map(i =>i.deviceId).includes(device.id)
                 })
             } else {
                 console.log('Device already exists, not changing anything')
@@ -51,16 +54,16 @@ export const useDevicesStore = defineStore('devices', () => {
                 const deviceStatusIndex2 = deviceStatus.value.findIndex(status => status.deviceId === data.data.id)
                 if (deviceStatusIndex2 === -1) return console.error('Device not found')
                 deviceStatus.value[deviceStatusIndex2].electricityStatus = data.data.electricityStatus
-                if (waitingResponseType.value === 'electricity') {
-                    waitingResponseType.value = null
+                if (busyDevices.value.find(i => i.deviceId === data.data.id && i.type === 'electricity')) {
+                    busyDevices.value = busyDevices.value.filter(i => i.deviceId !== data.data.id && i.type !== 'electricity')
                 }
                 break;
             case 'heating-status':
                 const deviceStatusIndex3 = deviceStatus.value.findIndex(status => status.deviceId === data.data.id)
                 if (deviceStatusIndex3 === -1) return console.error('Device not found')
                 deviceStatus.value[deviceStatusIndex3].heatingStatus = data.data.heatingStatus
-                if (waitingResponseType.value === 'heating') {
-                    waitingResponseType.value = null
+                if (busyDevices.value.find(i => i.deviceId === data.data.id && i.type === 'heating')) {
+                    busyDevices.value = busyDevices.value.filter(i => i.deviceId !== data.data.id && i.type !== 'heating')
                 }
                 break;
             default:
@@ -73,10 +76,17 @@ export const useDevicesStore = defineStore('devices', () => {
     const getDeviceStatus = (deviceId: string) => {
         return deviceStatus.value.find(status => status.deviceId === deviceId)
     }
+    const isDeviceBusy = (deviceId: string) => {
+        return !!busyDevices.value.find(i => i.deviceId === deviceId)
+    }
 
     const toggleElectricity = async (deviceId: string) => {
-        if (isBusy.value) return console.error('Already waiting for response')
-        waitingResponseType.value = 'electricity'
+        const isBusy = busyDevices.value.find(i => i.deviceId === deviceId && i.type === 'electricity')
+        if (isBusy) return console.error('Already waiting for response')
+        busyDevices.value.push({
+            deviceId,
+            type: 'electricity'
+        })
 
         const currentStatus = getDeviceStatus(deviceId)
         if (!currentStatus) return console.error('Device not found')
@@ -91,8 +101,12 @@ export const useDevicesStore = defineStore('devices', () => {
     }
 
     const toggleHeating = async (deviceId: string) => {
-        if (isBusy.value) return console.error('Already waiting for response')
-        waitingResponseType.value = 'heating'
+        const isBusy = busyDevices.value.find(i => i.deviceId === deviceId && i.type === 'heating')
+        if (isBusy) return console.error('Already waiting for response')
+        busyDevices.value.push({
+            deviceId,
+            type: 'heating'
+        })
 
         const currentStatus = getDeviceStatus(deviceId)
         if (!currentStatus) return console.error('Device not found')
@@ -107,8 +121,9 @@ export const useDevicesStore = defineStore('devices', () => {
 
     return {
         devices,
+        busyDevices,
         deviceStatus,
-        isBusy,
+        isDeviceBusy,
         getDeviceStatus,
         toggleElectricity,
         toggleHeating,

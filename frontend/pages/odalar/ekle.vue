@@ -20,6 +20,9 @@ const data = ref({
   sector: '',
   deviceId: null,
   userIds: [],
+  hasElectricity: false,
+  hasHeating: false,
+  hasWindow: false
 })
 const {data: users} = useApi<ApiResponse<UserWithRoleAndPrivileges[]>>('users')
 const {data: devices} = useApi<ApiResponse<DeviceWithRoom[]>>('devices')
@@ -33,6 +36,7 @@ const deviceOptions = computed(() => devices.value?.data.filter(d => !d.roomId).
   label: `${d.ip.split('::ffff:')[1]} - ${d.isOnline ? 'Aktif' : 'Pasif'}`,
   value: d.id
 })) || [])
+
 
 const getDayName = (day: number) => {
   switch (day) {
@@ -52,18 +56,31 @@ const getDayName = (day: number) => {
       return 'Pazar'
   }
 }
+
+interface SimpleOpenHour {
+  dayOfWeek: number
+  openHour: string
+  closeHour: string
+  controls: string[]
+}
+
 const openHours = ref([
-  [] as { dayOfWeek: number, openHour: string, closeHour: string }[],
-  [] as { dayOfWeek: number, openHour: string, closeHour: string }[],
-  [] as { dayOfWeek: number, openHour: string, closeHour: string }[],
-  [] as { dayOfWeek: number, openHour: string, closeHour: string }[],
-  [] as { dayOfWeek: number, openHour: string, closeHour: string }[],
-  [] as { dayOfWeek: number, openHour: string, closeHour: string }[],
-  [] as { dayOfWeek: number, openHour: string, closeHour: string }[],
+  [] as SimpleOpenHour[],
+  [] as SimpleOpenHour[],
+  [] as SimpleOpenHour[],
+  [] as SimpleOpenHour[],
+  [] as SimpleOpenHour[],
+  [] as SimpleOpenHour[],
+  [] as SimpleOpenHour[],
 ])
 const addOpenHourSection = (day: number) => {
-  const now =new Date()
-  openHours.value[day].push({dayOfWeek: day, openHour: getHoursAndMinutes(now), closeHour: getHoursAndMinutes(now)})
+  const now = new Date()
+  openHours.value[day].push({
+    dayOfWeek: day,
+    openHour: getHoursAndMinutes(now),
+    closeHour: getHoursAndMinutes(now),
+    controls: [] as string[]
+  })
 }
 const getHoursAndMinutes = (date: Date) => {
   const hours = date.getHours().toString().padStart(2, '0')
@@ -96,15 +113,15 @@ const handleSubmit = async () => {
     openHours: openHours.value.flat()
   })
 
- try {
-   const res = await $api<ApiResponse<RoomWithOpenHoursAndDeviceAndUsers>>('rooms', {
-     method: 'POST',
-     body: {
-       ...data.value,
-       openHours: openHours.value.flat()
-     }
-   })
-   
+  try {
+    const res = await $api<ApiResponse<RoomWithOpenHoursAndDeviceAndUsers>>('rooms', {
+      method: 'POST',
+      body: {
+        ...data.value,
+        openHours: openHours.value.flat()
+      }
+    })
+
     if (res.error) {
       toast.add({
         severity: 'error',
@@ -121,16 +138,81 @@ const handleSubmit = async () => {
       })
       navigateTo('/odalar')
     }
- }
- catch (e) {
+  } catch (e) {
     toast.add({
       severity: 'error',
       summary: 'Hata',
       detail: 'Oda eklenirken bir hata olustu, lutfen yonetici ile iletisime geciniz',
       life: 10000
     })
- }
+  }
 }
+
+const controlOptions = ref<{ label: string, value: string }[]>([])
+
+watch([() => data.value.hasElectricity, () => data.value.hasHeating], ([electricity, heating]) => {
+  if (electricity) {
+    controlOptions.value.push({label: 'Elektrik', value: 'electricity'})
+  } else {
+    controlOptions.value = controlOptions.value.filter(c => c.value !== 'electricity')
+  }
+  if (heating) {
+    controlOptions.value.push({label: 'Isitma', value: 'heating'})
+  } else {
+    controlOptions.value = controlOptions.value.filter(c => c.value !== 'heating')
+  }
+})
+// const handleExport = async () => {
+//   try {
+//     const res = await $api<BlobPart>(`rooms/${route.params.id}/export`, {method: 'GET', responseType: 'blob'})
+//     const url = window.URL.createObjectURL(new Blob([res]));
+//     const link = document.createElement('a');
+//     link.href = url;
+//     link.setAttribute('download', `${route.params.id}.xlsx`);
+//
+//     // Linki tıklayıp dosyayı indirin
+//     document.body.appendChild(link);
+//     link.click();
+//     link.parentNode?.removeChild(link);
+//     console.log(res)
+//   } catch (e) {
+//     console.log(e)
+//     toast.add(
+//         {
+//           severity: 'error',
+//           summary: 'Hata',
+//         }
+//     )
+//   }
+// }
+//
+// const handleImport = async (event: FileUploadUploaderEvent) => {
+//   const file = Array.isArray(event.files) ? event.files[0] : event.files;
+//   const formData = new FormData()
+//   formData.append('file', file);
+//   const res = await $api<ApiResponse<SimpleOpenHour[]>>(`rooms/${route.params.id}/import`, {
+//     method: 'POST',
+//     body: formData,
+//   })
+//
+//   if (!res?.data){
+//     toast.add({
+//       severity: 'error',
+//       summary: 'Hata',
+//       detail: res.error,
+//       life: 10000
+//     })
+//     return
+//   }
+//
+//   console.log(res.data)
+//   openHours.value = res.data.reduce((acc, curr) => {
+//     // @ts-ignore
+//     acc[curr.dayOfWeek].push(curr)
+//     return acc
+//   }, [[], [], [], [], [], [], []])
+// }
+
 </script>
 <template>
   <div class="p-4 flex flex-col gap-10 w-full h-full">
@@ -174,6 +256,30 @@ const handleSubmit = async () => {
                 option-label="label" option-value="value" filter class="w-full"/>
         <label for="deviceId">Cihaz</label>
       </FloatLabel>
+      <div v-if="data.deviceId" class=" col-span-2 w-full flex items-center justify-evenly">
+        <div class=" flex items-center gap-2">
+          <Checkbox v-model="data.hasElectricity" id="hasElectricity" class="" binary/>
+          <label for="hasElectricity">Cihazin elektrik kontrolu var mi?</label>
+        </div>
+        <div class=" flex items-center gap-2">
+          <Checkbox v-model="data.hasHeating" id="hasHeating" class="" binary/>
+          <label for="hasHeating">Cihazin isitma kontrolu var mi?</label>
+        </div>
+        <div class=" flex items-center gap-2">
+          <Checkbox v-model="data.hasWindow" id="hasWindow" class="" binary/>
+          <label for="hasWindow">Cihazin pencere sensoru var mi?</label>
+        </div>
+      </div>
+    </div>
+    <div class="flex w-full items-center justify-between">
+      <h3 class="font-bold text-2xl">
+        Zaman Cizelgesini ekle
+      </h3>
+      <div class="flex items-center gap-2">
+        <!--        <Button severity="secondary" label="Dışa Aktar" icon="pi pi-download" @click="handleExport" />-->
+        <!--        <FileUpload mode="basic" class="p-button-info" name="file" accept=".xlsx" :maxFileSize="1000000" custom-upload @uploader="handleImport"-->
+        <!--                    :auto="true" chooseLabel="İçe Aktar"/>-->
+      </div>
     </div>
     <div class="grid grid-cols-7">
       <div v-for="index in 7" class="flex flex-col border border-r-0" :class="cn(
@@ -190,18 +296,34 @@ const handleSubmit = async () => {
               <DatePicker
                   :maxDate="setHoursAndMinutes(openHours[index-1][hourSetIndex].closeHour ?? undefined)"
                   :model-value="setHoursAndMinutes(openHours[index-1][hourSetIndex].openHour ?? undefined)"
-                          @update:model-value="openHours[index-1][hourSetIndex].openHour = getHoursAndMinutes($event)"
-                          inputId="open_hour" time-only fluid/>
+                  @update:model-value="openHours[index-1][hourSetIndex].openHour = getHoursAndMinutes($event)"
+                  inputId="open_hour" time-only fluid/>
               <label for="open_hour">Baslangic </label>
             </FloatLabel>
             <FloatLabel>
               <DatePicker
                   :minDate="setHoursAndMinutes(openHours[index-1][hourSetIndex].openHour ?? undefined)"
                   :model-value="setHoursAndMinutes(openHours[index-1][hourSetIndex].closeHour ?? undefined)"
-                          @update:model-value="openHours[index-1][hourSetIndex].closeHour = getHoursAndMinutes($event)"
-                          inputId="close_hour" time-only fluid/>
+                  @update:model-value="openHours[index-1][hourSetIndex].closeHour = getHoursAndMinutes($event)"
+                  inputId="close_hour" time-only fluid/>
               <label for="close_hour">Bitis </label>
             </FloatLabel>
+            <FloatLabel>
+              <label for="controls">Sec</label>
+              <MultiSelect
+                  id="controls"
+                  v-model="openHours[index - 1][hourSetIndex].controls"
+                  class="!truncate w-full"
+                  :options="controlOptions"
+                  option-label="label"
+                  option-value="value"
+                  filter
+                  :max-selected-labels="0"
+                  selected-items-label="{0}"
+                  placeholder="sec"
+              />
+            </FloatLabel>
+
           </div>
           <Button severity="danger" class="!h-full !px-2" icon="pi pi-trash"
                   @click="openHours[index - 1].splice(hourSetIndex, 1)"/>
@@ -214,6 +336,7 @@ const handleSubmit = async () => {
         </div>
       </div>
     </div>
+
 
   </div>
 </template>
