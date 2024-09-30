@@ -32,8 +32,8 @@ export function useNotifications() {
         if (devicesWithoutRoom.length > 0) {
             const devicesWithoutRoomNotification = {
                 severity: 'warn',
-                summary: 'Odası olmayan cihazlar',
-                detail: `Odası olmayan ${devicesWithoutRoom.length} cihaz bulunmaktadır.`,
+                summary: 'Device without room',
+                detail: `You have ${devicesWithoutRoom.length} devices without room. Please assign them to a room.`,
 
             } as ToastMessageOptions
 

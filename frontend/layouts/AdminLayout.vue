@@ -13,17 +13,17 @@ const logout = () => {
 
 const MENU_ITEMS = [
   {
-    name: 'Kullanıcılar',
+    name: 'Users',
     icon: 'pi pi-users',
     link: '/kullanicilar',
   },
   {
-    name: 'Odalar',
+    name: 'Rooms',
     icon: 'pi pi-home',
     link: '/odalar',
   },
   {
-    name: 'Yetkiler',
+    name: 'Privileges',
     icon: 'pi pi-lock',
     link: '/yetkiler',
   },
@@ -86,7 +86,9 @@ isSidebarOpen ? 'gap-4':'gap-0 justify-center')"
         >
 
           <span class="pi pi-fw pi-power-off"></span>
-          <span v-show="isSidebarOpen">Çıkış Yap</span>
+          <span v-show="isSidebarOpen">
+            Log out
+          </span>
         </button>
       </div>
     </div>
@@ -95,7 +97,7 @@ isSidebarOpen ? 'gap-4':'gap-0 justify-center')"
         <div class="w-full bg-[#14293C] px-4 flex justify-between items-center">
           <div class="text-white py-4">
             <span>{{ company.companyData?.name }} </span>
-            YONETIM PANELI
+            Admin Panel
           </div>
           <Notifications/>
         </div>

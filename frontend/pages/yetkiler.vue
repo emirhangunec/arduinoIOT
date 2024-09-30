@@ -59,7 +59,7 @@ const deleteRole = (role: RoleWithPrivileges) => {
   >
     <template #header>
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <span class="text-xl font-bold">Roller</span>
+        <span class="text-xl font-bold">Roles</span>
         <div class="flex items-center justify-center gap-2">
           <Button @click="addNewRole" v-if="user.can('role.create')" icon="pi pi-plus" rounded
                   raised class="bg-blue-500 text-white"/>
@@ -67,11 +67,14 @@ const deleteRole = (role: RoleWithPrivileges) => {
         </div>
       </div>
     </template>
-    <Column sortable field="name" header="Rol ismi"></Column>
-    <Column sortable field="privileges" header="Yetkiler">
+    <Column sortable field="name" header="Role Name"></Column>
+    <Column sortable field="privileges" header="Privileges">
       <template #body="{data}">
         <div class="flex items-center justify-between gap-2 ">
-          <span>{{ data.privileges.length }} adet yetki</span>
+          <span>
+            <span v-if="data.privileges.length > 0">{{data.privileges.length}} Privileges</span>
+            <span v-else>No Privileges</span>
+          </span>
           <Button icon="pi pi-eye" icon-pos="right" severity="secondary"
                   v-if="user.can('role.read')"
                   @click="showRoleDetailDialog(data)"/>
@@ -79,7 +82,7 @@ const deleteRole = (role: RoleWithPrivileges) => {
         </div>
       </template>
     </Column>
-    <Column v-if="userCanDoAnyAction" header="İşlemler">
+    <Column v-if="userCanDoAnyAction" header="Actions">
       <template #body="{data}">
         <div class="flex gap-2">
           <Button icon="pi pi-pencil" severity="info" v-if="user.can('role.update')" :disabled="data.id==='1'" @click="editRole(data)"/>
@@ -87,7 +90,5 @@ const deleteRole = (role: RoleWithPrivileges) => {
         </div>
       </template>
     </Column>
-
   </DataTable>
-
 </template>

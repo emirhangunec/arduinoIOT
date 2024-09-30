@@ -28,15 +28,15 @@ const handleSubmit = async () => {
     if (response.error) {
       toast.add({
         severity: 'error',
-        summary: 'Hata',
+        summary: 'Error',
         detail: response.error,
         life: 10000
       })
     } else {
       toast.add({
         severity: 'success',
-        summary: 'Basarili',
-        detail: 'Rol basariyla silindi',
+        summary: 'Success',
+        detail: 'Role deleted successfully',
         life: 5000
       })
       emit('roleDeleted')
@@ -46,8 +46,8 @@ const handleSubmit = async () => {
     console.log(e)
     toast.add({
       severity: 'error',
-      summary: 'Hata',
-      detail: 'Rol silinirken bir hata olustu, bir rolu silmek icin o rolu kullanan tum kullanicilarin rolunu degistirmeniz veya silmeniz gerekmektedir',
+      summary: 'Error',
+      detail: 'An error occurred',
       life: 10000
     })
   }
@@ -57,18 +57,22 @@ const handleSubmit = async () => {
 </script>
 
 <template>
-  <Dialog dismissableMask v-model:visible="isOpen" modal header="Rol Sil" :style="{ width: '25rem' }">
+  <Dialog dismissableMask v-model:visible="isOpen" modal header="Delete Role" :style="{ width: '25rem' }">
     <div class="flex flex-col items-center justify-center gap-8 py-8 w-full ">
       <div class="text-center">
-        <p class="text-lg">Rolü silmek istediğinize emin misiniz?</p>
-        <p class="text-sm text-gray-500">Bu işlem geri alınamaz.</p>
+        <p class="text-lg">
+          Are you sure you want to delete this role?
+        </p>
+        <p class="text-sm text-gray-500">
+          This action cannot be undone.
+        </p>
       </div>
 
     </div>
     <template #footer>
       <div class="flex justify-end gap-2">
-        <Button type="button" label="Kapat" @click="isOpen = false" severity="secondary"></Button>
-        <Button :disabled="!canSubmit" @click="handleSubmit" type="button" label="Sil" severity="danger"
+        <Button type="button" label="Close" @click="isOpen = false" severity="secondary"></Button>
+        <Button :disabled="!canSubmit" @click="handleSubmit" type="button" label="Delete" severity="danger"
                 class="bg-green-500 text-white"></Button>
       </div>
     </template>

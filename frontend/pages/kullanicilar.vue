@@ -64,7 +64,7 @@ const userCanDoAnyAction = computed(() =>user.can('user.update') || user.can('us
   >
     <template #header>
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <span class="text-xl font-bold">Kullanicilar</span>
+        <span class="text-xl font-bold">Users</span>
         <div class="flex items-center justify-center gap-2">
           <Button @click="addNewUser" v-if="user.can(['user.create','role.read'])" icon="pi pi-plus" rounded
                   raised class="bg-blue-500 text-white"/>
@@ -72,8 +72,8 @@ const userCanDoAnyAction = computed(() =>user.can('user.update') || user.can('us
         </div>
       </div>
     </template>
-    <Column sortable field="name" header="İsim Soyisim"></Column>
-    <Column sortable field="email" header="E-posta Adresi"></Column>
+    <Column sortable field="name" header="Full Name"></Column>
+    <Column sortable field="email" header="Email"></Column>
     <Column sortable field="role.name" header="Role">
       <template #body="{data}">
         <div class="flex items-center justify-between gap-2 ">
@@ -85,7 +85,7 @@ const userCanDoAnyAction = computed(() =>user.can('user.update') || user.can('us
         </div>
       </template>
     </Column>
-    <Column v-if="userCanDoAnyAction" header="İşlemler">
+    <Column v-if="userCanDoAnyAction" header="Actions">
       <template #body="{data}">
         <div class="flex gap-2">
           <Button icon="pi pi-pencil" severity="info" v-if="user.can('user.update')" @click="editUser(data)"/>
@@ -97,7 +97,3 @@ const userCanDoAnyAction = computed(() =>user.can('user.update') || user.can('us
   </DataTable>
 
 </template>
-
-<style>
-
-</style>

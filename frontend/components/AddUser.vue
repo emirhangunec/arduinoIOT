@@ -13,8 +13,8 @@ watch(isOpen, async (val) => {
     if (!userCanReadRoles) {
       toast.add({
         severity: 'error',
-        summary: 'Hata',
-        detail: 'Kullanici ekleyebilmek icin rolleri goruntuleme yetkiniz olmali, lutfen yonetici ile iletisime geciniz',
+        summary: 'Error',
+        detail: 'You do not have permission to create a new user',
         life: 10000
       })
       isOpen.value = false
@@ -52,15 +52,15 @@ const handleSubmit = async () => {
     if (response.error) {
       toast.add({
         severity: 'error',
-        summary: 'Hata',
+        summary: 'Error',
         detail: response.error,
         life: 10000
       })
     } else {
       toast.add({
         severity: 'success',
-        summary: 'Basarili',
-        detail: 'Kullanici basariyla eklendi',
+        summary: 'Success',
+        detail: 'User added successfully',
         life: 5000
       })
       emit('new-user-added')
@@ -69,8 +69,8 @@ const handleSubmit = async () => {
   } catch (e) {
     toast.add({
       severity: 'error',
-      summary: 'Hata',
-      detail: 'Kullanici eklenirken bir hata olustu, lutfen yonetici ile iletisime geciniz',
+      summary: 'Error',
+      detail: 'An error occurred while adding the user',
       life: 10000
     })
   }
@@ -84,20 +84,26 @@ const showNewRoleDialog = () => {
 
 <template>
   <AddRole @new-role-added="onNewRoleAdded" v-model:is-open="isNewRoleDialogVisible"/>
-  <Dialog dismissableMask v-model:visible="isOpen" modal header="Yeni Kullanici Ekle" :style="{ width: '25rem' }">
+  <Dialog dismissableMask v-model:visible="isOpen" modal header="Add New User" :style="{ width: '25rem' }">
     <div class="flex flex-col items-center justify-center gap-8 py-8 w-full ">
       <FloatLabel class="w-full">
         <InputText v-model="state.name" class="w-full" id="name"/>
-        <label for="name">Isim Soyisim</label>
+        <label for="name">
+          Full Name
+        </label>
       </FloatLabel>
 
       <FloatLabel class="w-full">
         <InputText v-model="state.email" id="email" type="email" class="w-full" />
-        <label for="email">E-posta Adresi</label>
+        <label for="email">
+          Email
+        </label>
       </FloatLabel>
       <FloatLabel class="w-full" >
         <InputText id="password" v-model="state.password" type="password" class="w-full" />
-        <label for="password">Sifre</label>
+        <label for="password">
+          Password
+        </label>
       </FloatLabel>
       <div class="flex w-full gap-2 items-center justify-stretch">
         <FloatLabel class="w-full">
@@ -109,15 +115,17 @@ const showNewRoleDialog = () => {
                   filter
                   checkmark
            class="w-full" />
-          <label for="role">Rol</label>
+          <label for="role">
+            Role
+          </label>
         </FloatLabel>
         <Button v-if="user.can('role.create')" type="button" @click="showNewRoleDialog" severity="info" icon="pi pi-plus"/>
       </div>
     </div>
     <template #footer>
       <div class="flex justify-end gap-2">
-        <Button type="button" label="Kapat" @click="isOpen = false" severity="secondary"></Button>
-        <Button :disabled="!canSubmit" @click="handleSubmit" type="button" label="Kaydet" class="bg-green-500 text-white"></Button>
+        <Button type="button" label="Close" @click="isOpen = false" severity="secondary"></Button>
+        <Button :disabled="!canSubmit" @click="handleSubmit" type="button" label="Save" class="bg-green-500 text-white"></Button>
       </div>
     </template>
 

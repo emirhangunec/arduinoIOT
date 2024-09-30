@@ -71,7 +71,9 @@ const onSubmit = handleSubmit(async (values) => {
 		<div
 			class="bg-white w-full h-full flex flex-col gap-4 items-center justify-center"
 		>
-			<h1 class="text-3xl text-blue-950 font-bold py-8">Giriş Ekranı</h1>
+			<h1 class="text-3xl text-blue-950 font-bold py-8">
+        Login
+      </h1>
 			<form
 				class="flex flex-col gap-4"
 				@submit="onSubmit"
@@ -87,7 +89,7 @@ const onSubmit = handleSubmit(async (values) => {
 								class="font-bold text-lg text-blue-950 flex gap-2 items-center"
 							>
 								<Mail class="text-xs" />
-								Yönetici emaili
+                Email
 							</FormLabel>
 							<FormControl class="w-full">
 								<Input
@@ -98,7 +100,7 @@ const onSubmit = handleSubmit(async (values) => {
 								/>
 							</FormControl>
 							<FormDescription class="text-gray-400 text-xs">
-								*Yönetici emaili ile giriş yapabilirsiniz.
+                *You can login with your admin email.
 							</FormDescription>
 							<FormMessage />
 						</FormItem>
@@ -116,18 +118,18 @@ const onSubmit = handleSubmit(async (values) => {
 								class="font-bold text-lg text-blue-950 flex gap-2 items-center"
 							>
 								<LockKeyhole class="text-xs" />
-								Yönetici şifresi
+                Password
 							</FormLabel>
 							<FormControl>
 								<Input
 									type="password"
-									placeholder="şifre"
+									placeholder="password"
 									v-bind="componentField"
 									class="border-2 border-gray-300 rounded-md p-4"
 								/>
 							</FormControl>
 							<FormDescription class="text-gray-400 text-xs">
-								*Yönetici şifresi ile giriş yapabilirsiniz.
+                *You can login with your admin password.
 							</FormDescription>
 							<FormMessage />
 						</FormItem>
@@ -139,7 +141,7 @@ const onSubmit = handleSubmit(async (values) => {
 						class="flex items-center justify-center bg-blue-950"
 						type="submit"
 					>
-						Giris Yap
+            Login
 					</Button>
 				</div>
 			</form>

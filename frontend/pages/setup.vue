@@ -57,7 +57,9 @@ const onSubmit = handleSubmit(async (values) => {
       />
     </div>
     <div class="bg-white w-full h-full flex flex-col gap-4 items-center justify-center">
-      <h1 class="text-3xl text-blue-950 font-bold py-8">Yönetici Kayıt Ekranı</h1>
+      <h1 class="text-3xl text-blue-950 font-bold py-8">
+        Register your company
+      </h1>
         <form @submit="onSubmit" class="flex flex-col gap-6">
           <FormField
               class="!w-full"
@@ -65,38 +67,43 @@ const onSubmit = handleSubmit(async (values) => {
             <FormItem v-auto-animate>
               <FormLabel class="font-bold text-lg text-blue-950 flex gap-2 items-center">
                 <Building2 class="text-xs"/>
-                Şirket İsmi</FormLabel>
+                Company Name
+              </FormLabel>
               <FormControl class="!w-full">
                 <Input
                     class="!w-[500px] border-2 border-gray-300 rounded-md p-4"
                     type="text" placeholder="" v-bind="componentField"/>
               </FormControl>
               <FormDescription class="text-gray-400 text-xs">
-                *Şirketinizin ismini giriniz.
+                *You can enter your company name.
               </FormDescription>
               <FormMessage/>
             </FormItem>
           </FormField>
           <FormField v-slot="{ componentField }" name="email" :validate-on-blur="!isFieldDirty">
             <FormItem v-auto-animate>
-              <FormLabel class="font-bold text-lg text-blue-950 flex gap-2 items-center"><Mail class="text-xs" />Yönetici emaili</FormLabel>
+              <FormLabel class="font-bold text-lg text-blue-950 flex gap-2 items-center"><Mail class="text-xs" />
+                Admin Email
+              </FormLabel>
               <FormControl>
                 <Input type="text" placeholder="" v-bind="componentField"/>
               </FormControl>
               <FormDescription class="text-gray-400 text-xs">
-                *Yönetici emaili giriniz.
+                *You can enter your email address.
               </FormDescription>
               <FormMessage/>
             </FormItem>
           </FormField>
           <FormField v-slot="{ componentField }" name="name" :validate-on-blur="!isFieldDirty">
             <FormItem v-auto-animate>
-              <FormLabel class="font-bold text-lg text-blue-950 flex gap-2 items-center"><User class="text-xs"/>Yönetici Isim soyisim</FormLabel>
+              <FormLabel class="font-bold text-lg text-blue-950 flex gap-2 items-center"><User class="text-xs"/>
+                Admin Name
+              </FormLabel>
               <FormControl>
                 <Input type="text" placeholder="" v-bind="componentField"/>
               </FormControl>
               <FormDescription class="text-gray-400 text-xs">
-                *Yönetici isim soyisim giriniz.
+                *You can enter your full name.
               </FormDescription>
               <FormMessage/>
             </FormItem>
@@ -104,12 +111,14 @@ const onSubmit = handleSubmit(async (values) => {
 
           <FormField v-slot="{ componentField }" name="password" :validate-on-blur="!isFieldDirty">
             <FormItem v-auto-animate>
-              <FormLabel class="font-bold text-lg text-blue-950 flex gap-2 items-center"><LockKeyhole class="text-xs" />Yönetici sifresi</FormLabel>
+              <FormLabel class="font-bold text-lg text-blue-950 flex gap-2 items-center"><LockKeyhole class="text-xs" />
+                Admin Password
+              </FormLabel>
               <FormControl>
                 <Input type="password" placeholder="" v-bind="componentField"/>
               </FormControl>
               <FormDescription class="text-gray-400 text-xs">
-                *Yönetici şifresi giriniz.
+                *You can enter your password.
               </FormDescription>
               <FormMessage/>
             </FormItem>
@@ -120,7 +129,7 @@ const onSubmit = handleSubmit(async (values) => {
                 class="flex items-center justify-center bg-blue-950"
                 type="submit"
             >
-              Kayıt Ol
+              Register
             </Button>
           </div>
         </form>

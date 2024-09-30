@@ -14,14 +14,16 @@ const roleDetail = computed(() => props.role)
 
 
 <template>
-  <Dialog dismissableMask v-model:visible="isOpen" modal header="Rol Detaylari" :style="{ width: '25rem' }">
+  <Dialog dismissableMask v-model:visible="isOpen" modal header="Role Details" :style="{ width: '25rem' }">
     <div v-if="roleDetail">
       <div class="flex gap-2">
-        <span class="font-bold">Rol:</span>
+        <span class="font-bold">Role:</span>
         <span>{{ roleDetail.name }}</span>
       </div>
       <div class="flex flex-col gap-2">
-        <span class="font-bold">Yetkiler:</span>
+        <span class="font-bold">
+          Privileges:
+        </span>
         <div class="flex gap-2 flex-wrap">
           <span v-for="privilege in roleDetail.privileges" :key="privilege.id"
                 class="bg-gray-200 text-gray-800 px-2 py-1 rounded">{{ privilege.label }}
@@ -31,7 +33,7 @@ const roleDetail = computed(() => props.role)
       </div>
     </div>
     <div class="flex justify-end gap-2">
-      <Button type="button" label="Kapat" @click="isOpen = false"></Button>
+      <Button type="button" label="Close" @click="isOpen = false"></Button>
     </div>
   </Dialog>
 </template>

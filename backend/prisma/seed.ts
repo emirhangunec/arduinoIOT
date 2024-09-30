@@ -7,23 +7,23 @@ async function main() {
 
     const privileges= await prisma.privilege.createManyAndReturn({
         data: [
-            {name: 'user.create', label: 'Yeni kullanıcı oluşturma'},
-            {name: 'user.read', label: 'Kullanıcıları listeleme'},
-            {name: 'user.update', label: 'Kullanıcı güncelleme'},
-            {name: 'user.delete', label: 'Kullanıcı silme'},
+            {name: 'user.create', label: 'Create user'},
+            {name: 'user.read', label: 'Read user'},
+            {name: 'user.update', label: 'Update user'},
+            {name: 'user.delete', label: 'Delete user'},
 
-            {name: 'role.create', label: 'Yeni rol oluşturma'},
-            {name: 'role.read', label: 'Rolleri listeleme'},
-            {name: 'role.update', label: 'Rol güncelleme'},
-            {name: 'role.delete', label: 'Rol silme'},
+            {name: 'role.create', label: 'Create role'},
+            {name: 'role.read', label: 'Read role'},
+            {name: 'role.update', label: 'Update role'},
+            {name: 'role.delete', label: 'Delete role'},
 
-            {name: 'room.all.create', label: 'Yeni oda oluşturma'},
-            {name: 'room.all.read', label: 'Odaları listeleme'},
-            {name: 'room.all.update', label: 'Oda güncelleme'},
-            {name: 'room.all.delete', label: 'Oda silme'},
+            {name: 'room.all.create', label: 'Create room'},
+            {name: 'room.all.read', label: 'Read room'},
+            {name: 'room.all.update', label: 'Update room'},
+            {name: 'room.all.delete', label: 'Delete room'},
 
-            {name: 'room.user.read', label: 'Odaları listeleme'},
-            {name: 'room.user.update', label: 'Oda güncelleme'},
+            {name: 'room.user.read', label: 'Read assigned rooms'},
+            {name: 'room.user.update', label: 'Update assigned rooms'},
 
         ],
     })
@@ -37,14 +37,6 @@ async function main() {
             privileges: {
                 connect: allPrivilegeIds
             }
-        }
-    })
-
-    const fakeDevice = await prisma.device.create({
-        data: {
-            id: '1',
-            ip: '::ffff:192.168.1.100',
-            isOnline: false,
         }
     })
 

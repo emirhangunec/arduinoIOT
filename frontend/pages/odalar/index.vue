@@ -52,14 +52,14 @@ const confirmDeletion = (event: MouseEvent, room: RoomWithOpenHoursAndDeviceAndU
   if (!event.currentTarget) return
   confirmPopup.require({
     target: event.currentTarget as HTMLElement,
-    message: `${room.name} isimli odayi silmek istediğinize emin misiniz?`,
+    message: `Are you sure you want to delete ${room.name} room?`,
     icon: 'pi pi-exclamation-triangle',
     rejectProps: {
-      label: 'Hayır',
+      label: 'Cancel',
       severity: 'secondary'
     },
     acceptProps: {
-      label: 'Evet',
+      label: 'Yes',
       severity: 'danger'
     },
     accept: async () => {
@@ -69,7 +69,7 @@ const confirmDeletion = (event: MouseEvent, room: RoomWithOpenHoursAndDeviceAndU
       await refresh()
       toast.add({
         severity: 'success',
-        summary: `${room.name} isimli oda silindi`,
+        summary: `Room ${room.name} deleted successfully`,
         life: 5000
       })
     }
@@ -96,18 +96,20 @@ onMounted(() => {
              :rows-per-page-options="[10, 25, 50, 100]"
              removableSort
              filter-display="menu"
-             filter-locale="TR-tr"
+             filter-locale="EN-US"
   >
     <template #header>
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <span class="text-xl font-bold">Odalar</span>
+        <span class="text-xl font-bold">
+          Rooms
+        </span>
         <div class="flex gap-1">
           <Button type="button" icon="pi pi-filter-slash" outlined @click="initFilter()"/>
           <IconField>
             <InputIcon>
               <i class="pi pi-search"/>
             </InputIcon>
-            <InputText v-model="filters['global'].value" placeholder="Ara..."/>
+            <InputText v-model="filters['global'].value" placeholder="Search..."/>
           </IconField>
         </div>
         <div class="flex items-center justify-center gap-2">
@@ -118,57 +120,61 @@ onMounted(() => {
         </div>
       </div>
     </template>
-    <Column sortable field="name" header="Oda Ismi" :show-filter-operator="false" :show-add-button="false">
+    <Column sortable field="name" header="Room Name" :show-filter-operator="false" :show-add-button="false">
       <template #filter="{ filterModel, filterCallback }">
-        <InputText v-model="filterModel.value" type="text" @input="filterCallback()" placeholder="Ara..."/>
+        <InputText v-model="filterModel.value" type="text" @input="filterCallback()" placeholder="Search..."/>
       </template>
     </Column>
-    <Column sortable field="doorNumber" header="Kapi Numarasi" :show-filter-operator="false" :show-add-button="false">
+    <Column sortable field="doorNumber" header="Door Number" :show-filter-operator="false" :show-add-button="false">
       <template #body="{data}">
         <span>{{ data.doorNumber || '-' }}</span>
       </template>
       <template #filter="{ filterModel, filterCallback }">
-        <InputText v-model="filterModel.value" type="text" @input="filterCallback()" placeholder="Ara..."/>
+        <InputText v-model="filterModel.value" type="text" @input="filterCallback()" placeholder="Search..."/>
       </template>
     </Column>
-    <Column sortable field="floor" header="Kat" :show-filter-operator="false" :show-add-button="false">
+    <Column sortable field="floor" header="Floor" :show-filter-operator="false" :show-add-button="false">
       <template #filter="{ filterModel, filterCallback }">
-        <InputText v-model="filterModel.value" type="text" @input="filterCallback()" placeholder="Ara..."/>
+        <InputText v-model="filterModel.value" type="text" @input="filterCallback()" placeholder="Search..."/>
       </template>
     </Column>
-    <Column sortable field="sector" header="Sektor" :show-filter-operator="false" :show-add-button="false">
+    <Column sortable field="sector" header="Sector" :show-filter-operator="false" :show-add-button="false">
       <template #filter="{ filterModel, filterCallback }">
-        <InputText v-model="filterModel.value" type="text" @input="filterCallback()" placeholder="Ara..."/>
+        <InputText v-model="filterModel.value" type="text" @input="filterCallback()" placeholder="Search..."/>
       </template>
     </Column>
-    <Column field="users" header="Kullanicilar">
+    <Column field="users" header="Users">
       <template #body="{data}">
         <div v-if="data.users.length" class="flex gap-2">
           <span v-for="user in data.users" :key="user.id">{{ user.name }}</span>
         </div>
         <div v-else>
-          <span class="text-sm text-red-500">Atanmis Kullanici Yok</span>
+          <span class="text-sm text-red-500">
+            No User
+          </span>
         </div>
       </template>
     </Column>
-    <Column sortable field="device.isOnline" header="Cihaz">
+    <Column sortable field="device.isOnline" header="Device">
       <template #body="{data}">
         <div v-if="data.device" class="items-center justify-center flex gap-2">
           <span :class="cn(
               data.device.isOnline? 'text-green-500': 'text-red-500'
           )">
-            {{ data.device.isOnline ? 'Aktif' : 'Pasif' }}
+            {{ data.device.isOnline ? 'Online' : 'Offline' }}
           </span>
           <div class="w-4 h-4 rounded-full" :class="cn(
               data.device.isOnline? 'bg-green-500 animate-pulse': 'bg-red-500'
           )"></div>
         </div>
         <div v-else>
-          <span class="text-sm text-red-500">Cihaz Yok</span>
+          <span class="text-sm text-red-500">
+            No Device
+          </span>
         </div>
       </template>
     </Column>
-    <Column v-if="userCanDoAnyAction" header="İşlemler">
+    <Column v-if="userCanDoAnyAction" header="Actions">
       <template #body="{data}">
         <div class="flex gap-2">
           <Button icon="pi pi-eye" severity="info" v-if="user.can('room.all.read')" @click="navigateTo(`/odalar/${data.id}`)"/>

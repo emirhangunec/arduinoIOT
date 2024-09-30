@@ -25,8 +25,7 @@ const {
 } = useApi<ApiResponse<RoomWithOpenHoursAndDeviceAndUsers>>(`rooms/${route.params.id}?device=true&openHours=true`)
 const deviceId = computed(() => room.value?.data.device?.id ?? '')
 const deviceStatus = computed(() => devicesStore.getDeviceStatus(deviceId.value))
-const toast = useToast()
-const {$api} = useNuxtApp()
+
 </script>
 
 <template>
@@ -44,9 +43,9 @@ const {$api} = useNuxtApp()
                 :class="deviceStatus?.deviceId ? 'bg-green-500' : 'bg-red-500'"
           ></span>
           <span>
-            {{ deviceStatus?.deviceId ? 'Cihaz Aktif' : 'Cihaz devre disi' }}
+            {{ deviceStatus?.deviceId ? 'Online' : 'Offline' }}
           </span>
-          <Button label="Duzenle" icon="pi pi-pencil" @click="navigateTo(`/odalar/${route.params.id}/duzenle`)"
+          <Button label="Edit" icon="pi pi-pencil" @click="navigateTo(`/odalar/${route.params.id}/duzenle`)"
           />
         </div>
       </div>
@@ -55,17 +54,23 @@ const {$api} = useNuxtApp()
         <div class="flex gap-4">
 
           <div class="flex flex-col gap-2">
-            <span class="font-bold">sektor</span>
+            <span class="font-bold">
+              Sector
+            </span>
             <span>{{ room.data.sector }}</span>
           </div>
         </div>
         <div class="flex gap-4">
           <div class="flex flex-col gap-2">
-            <span class="font-bold">Oda Numarasi</span>
+            <span class="font-bold">
+              Room Number
+            </span>
             <span>{{ room.data.doorNumber }}</span>
           </div>
           <div class="flex flex-col gap-2">
-            <span class="font-bold">Kat</span>
+            <span class="font-bold">
+              Floor
+            </span>
             <span>{{ room.data.floor }}</span>
           </div>
         </div>
@@ -74,15 +79,21 @@ const {$api} = useNuxtApp()
       <div class="" v-if="deviceStatus">
         <div class="flex gap-4">
           <div class="flex flex-col gap-2" v-if="room.data.device?.hasWindowSensor">
-            <span class="font-bold">Cam kapali mi?</span>
+            <span class="font-bold">
+              Is Window Closed?
+            </span>
             <span>{{ deviceStatus.windowStatus }}</span>
           </div>
           <div class="flex flex-col gap-2" v-if="room.data.device?.hasElectricityControl">
-            <span class="font-bold">Elektrik Acik mi?</span>
+            <span class="font-bold">
+              Is Electricity On?
+            </span>
             <ToggleSwitch :disabled="devicesStore.isDeviceBusy(deviceId)" @click="devicesStore.toggleElectricity(deviceId)"  v-model="deviceStatus.electricityStatus" />
           </div>
           <div class="flex flex-col gap-2" v-if="room.data.device?.hasHeaterControl">
-            <span class="font-bold">Isinma acik mi?</span>
+            <span class="font-bold">
+              Is Heating On?
+            </span>
             <ToggleSwitch :disabled="devicesStore.isDeviceBusy(deviceId)" @click="devicesStore.toggleHeating(deviceId)"  v-model="deviceStatus.heatingStatus" />
           </div>
         </div>

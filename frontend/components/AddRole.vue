@@ -14,8 +14,8 @@ watch(isOpen, async (val) => {
     if (!hasPermission) {
       toast.add({
         severity: 'error',
-        summary: 'Hata',
-        detail: 'Rol ekleyebilmek icin yetkiniz olmali, lutfen yonetici ile iletisime geciniz',
+        summary: 'Error',
+        detail: 'You do not have permission to create a new role',
         life: 10000
       })
       isOpen.value = false
@@ -45,15 +45,15 @@ const handleSubmit = async () => {
     if (response.error) {
       toast.add({
         severity: 'error',
-        summary: 'Hata',
+        summary: 'Error',
         detail: response.error,
         life: 10000
       })
     } else {
       toast.add({
         severity: 'success',
-        summary: 'Basarili',
-        detail: 'Rol basariyla eklendi',
+        summary: 'Success',
+        detail: 'Role added successfully',
         life: 5000
       })
       emit('newRoleAdded')
@@ -63,8 +63,8 @@ const handleSubmit = async () => {
     console.log(e)
     toast.add({
       severity: 'error',
-      summary: 'Hata',
-      detail: 'Rol eklerken bir hata olustu',
+      summary: 'Error',
+      detail: 'An error occurred while adding the role',
       life: 10000
     })
   }
@@ -74,11 +74,11 @@ const handleSubmit = async () => {
 </script>
 
 <template>
-  <Dialog dismissableMask v-model:visible="isOpen" modal header="Yeni Rol Ekle" :style="{ width: '25rem' }">
+  <Dialog dismissableMask v-model:visible="isOpen" modal header="Add New Role" :style="{ width: '25rem' }">
     <div class="flex flex-col items-center justify-center gap-8 py-8 w-full ">
       <FloatLabel class="w-full">
         <InputText v-model="data.name" class="w-full" id="name"/>
-        <label for="name">Rol ismi</label>
+        <label for="name">Role Name</label>
       </FloatLabel>
 
       <FloatLabel class="w-full">
@@ -93,14 +93,16 @@ const handleSubmit = async () => {
             option-value="id"
             checkmark
             class="w-full"/>
-        <label for="privileges">Yetkiler</label>
+        <label for="privileges">
+          Privileges
+        </label>
       </FloatLabel>
 
     </div>
     <template #footer>
       <div class="flex justify-end gap-2">
-        <Button type="button" label="Kapat" @click="isOpen = false" severity="secondary"></Button>
-        <Button :disabled="!canSubmit" @click="handleSubmit" type="button" label="Kaydet"
+        <Button type="button" label="Close" @click="isOpen = false" severity="secondary"></Button>
+        <Button :disabled="!canSubmit" @click="handleSubmit" type="button" label="Save"
                 class="bg-green-500 text-white"></Button>
       </div>
     </template>

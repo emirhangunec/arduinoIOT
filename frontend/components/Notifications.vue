@@ -49,6 +49,7 @@ const generateTailwindClassesForNotification = (notification:ToastMessageOptions
           <CheckCheck class="w-4 h-4"/>
         </Button>
       </div>
+
       <div class="overflow-y-auto max-h-96">
         <div v-for="notification in notifications" :key="notification.detail"
              class="p-2 rounded-md" :class="cn(

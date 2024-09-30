@@ -24,15 +24,15 @@ const handleSubmit = async () => {
     if (response.error) {
       toast.add({
         severity: 'error',
-        summary: 'Hata',
+        summary: 'Error',
         detail: response.error,
         life: 10000
       })
     } else {
       toast.add({
         severity: 'success',
-        summary: 'Basarili',
-        detail: 'Kullanici basariyla silindi',
+        summary: 'Success',
+        detail: 'User deleted successfully',
         life: 5000
       })
       emit('user-deleted')
@@ -41,8 +41,8 @@ const handleSubmit = async () => {
   } catch (e) {
     toast.add({
       severity: 'error',
-      summary: 'Hata',
-      detail: 'Kullanici silinirken bir hata olustu, lutfen yonetici ile iletisime geciniz',
+      summary: 'Error',
+      detail: 'An error occurred',
       life: 10000
     })
   }
@@ -52,11 +52,11 @@ const handleSubmit = async () => {
 </script>
 
 <template>
-  <Dialog dismissableMask v-model:visible="isOpen" modal header="Kullaniciyi sil" :style="{ width: '25rem' }">
+  <Dialog dismissableMask v-model:visible="isOpen" modal header="Delete User" :style="{ width: '25rem' }">
     <div v-if="userToDelete" class="flex flex-col items-center justify-center gap-8 py-8 w-full ">
 
       <div class="flex gap-2">
-        <span class="font-bold">Ad:</span>
+        <span class="font-bold">Name:</span>
         <span>{{ userToDelete.name }}</span>
       </div>
       <div class="flex gap-2">
@@ -64,20 +64,20 @@ const handleSubmit = async () => {
         <span>{{ userToDelete.email }}</span>
       </div>
       <div class="flex gap-2">
-        <span class="font-bold">Rol:</span>
+        <span class="font-bold">Role:</span>
         <span>{{ userToDelete.role.name }}</span>
       </div>
 
       <p>
-        Kullaniciyi silmek istediginize emin misiniz?
+        Are you sure you want to delete this user?
       </p>
     </div>
     <template #footer>
       <div class="flex justify-end w-full gap-2">
 
 
-        <Button type="button" label="Kapat" @click="isOpen = false" severity="secondary"/>
-        <Button :disabled="!canSubmit" @click="handleSubmit" type="button" label="Sil"
+        <Button type="button" label="Close" @click="isOpen = false" severity="secondary"/>
+        <Button :disabled="!canSubmit" @click="handleSubmit" type="button" label="Delete"
                severity="danger"  class="bg-green-500 text-white"/>
 
       </div>
