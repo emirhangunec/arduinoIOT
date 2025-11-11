@@ -8,6 +8,69 @@ definePageMeta({
 const { $api } = useNuxtApp();
 const devicesStore = useDevicesStore();
 
+// Loading state
+const isLoading = ref(true);
+const loadingSteps = ref([
+    {
+        id: "init",
+        label: "Sistem başlatılıyor...",
+        icon: "pi pi-spin pi-spinner",
+        completed: false,
+        active: false,
+    },
+    {
+        id: "rooms",
+        label: "Odalar yükleniyor...",
+        icon: "pi pi-building",
+        completed: false,
+        active: false,
+    },
+    {
+        id: "devices",
+        label: "Cihazlar taranıyor...",
+        icon: "pi pi-server",
+        completed: false,
+        active: false,
+    },
+    {
+        id: "ready",
+        label: "Yönetim paneli hazır",
+        icon: "pi pi-check-circle",
+        completed: false,
+        active: false,
+    },
+]);
+
+const startLoadingSequence = async () => {
+    // Step 1: Sistem başlatılıyor
+    loadingSteps.value[0].active = true;
+    await new Promise((resolve) => setTimeout(resolve, 1800));
+    loadingSteps.value[0].completed = true;
+    loadingSteps.value[0].active = false;
+
+    // Step 2: Odalar yükleniyor
+    loadingSteps.value[1].active = true;
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    loadingSteps.value[1].completed = true;
+    loadingSteps.value[1].active = false;
+
+    // Step 3: Cihazlar taranıyor
+    loadingSteps.value[2].active = true;
+    await new Promise((resolve) => setTimeout(resolve, 1800));
+    loadingSteps.value[2].completed = true;
+    loadingSteps.value[2].active = false;
+
+    // Step 4: Hazır
+    loadingSteps.value[3].active = true;
+    await new Promise((resolve) => setTimeout(resolve, 1400));
+    loadingSteps.value[3].completed = true;
+    loadingSteps.value[3].active = false;
+
+    // Hide loading after a brief moment
+    await new Promise((resolve) => setTimeout(resolve, 900));
+    isLoading.value = false;
+};
+
 // Get all rooms
 const {
     data: roomsResponse,
@@ -187,7 +250,10 @@ const goToHome = () => {
 };
 
 // Auto-refresh
-onMounted(() => {
+onMounted(async () => {
+    // Start loading sequence
+    await startLoadingSequence();
+
     setInterval(() => {
         refresh();
     }, 5000);
@@ -305,7 +371,16 @@ const saveSchedule = async () => {
 </script>
 
 <template>
-    <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <LoadingScreen
+        v-if="isLoading"
+        :steps="loadingSteps"
+        title="Akıllı Bina Yönetim Sistemi"
+        subtitle="Yönetim paneli başlatılıyor..."
+    />
+    <div
+        v-else
+        class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100"
+    >
         <!-- Header -->
         <div
             class="bg-gradient-to-r from-blue-600 to-indigo-700 shadow-xl sticky top-0 z-10"

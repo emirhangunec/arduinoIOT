@@ -76,6 +76,15 @@ const showRoomSelector = ref(false)
 const selectedFloor = ref<string>('1')
 const selectedRoomNumber = ref<string>('1')
 
+// Loading state for device connection
+const isConnecting = ref(false)
+const connectionSteps = ref([
+  { id: 'check', label: 'Cihaz kontrol ediliyor...', icon: 'pi pi-search', completed: false, active: false },
+  { id: 'ip', label: 'IP bilgisi alınıyor...', icon: 'pi pi-map-marker', completed: false, active: false },
+  { id: 'connect', label: 'Cihaza bağlanılıyor...', icon: 'pi pi-link', completed: false, active: false },
+  { id: 'ready', label: `Oda ${selectedRoom.value?.name || 'X'} uzaktan izlenme ve yönetime hazır`, icon: 'pi pi-check-circle', completed: false, active: false },
+])
+
 // Filter rooms by floor
 const roomsByFloor = computed(() => {
   const grouped: Record<string, RoomWithOpenHoursAndDeviceAndUsers[]> = {}
@@ -94,8 +103,50 @@ const floors = computed(() => {
   return Object.keys(roomsByFloor.value).sort((a, b) => parseInt(a) - parseInt(b))
 })
 
+// Connection loading sequence
+const startConnectionSequence = async (room: RoomWithOpenHoursAndDeviceAndUsers) => {
+  isConnecting.value = true
+  
+  // Reset steps
+  connectionSteps.value.forEach(step => {
+    step.completed = false
+    step.active = false
+  })
+  
+  // Update ready step with room name
+  connectionSteps.value[3].label = `Oda ${room.name} uzaktan izlenme ve yönetime hazır`
+  
+  // Step 1: Cihaz kontrol ediliyor
+  connectionSteps.value[0].active = true
+  await new Promise(resolve => setTimeout(resolve, 2000))
+  connectionSteps.value[0].completed = true
+  connectionSteps.value[0].active = false
+  
+  // Step 2: IP bilgisi alınıyor
+  connectionSteps.value[1].active = true
+  await new Promise(resolve => setTimeout(resolve, 1800))
+  connectionSteps.value[1].completed = true
+  connectionSteps.value[1].active = false
+  
+  // Step 3: Cihaza bağlanılıyor
+  connectionSteps.value[2].active = true
+  await new Promise(resolve => setTimeout(resolve, 2200))
+  connectionSteps.value[2].completed = true
+  connectionSteps.value[2].active = false
+  
+  // Step 4: Hazır
+  connectionSteps.value[3].active = true
+  await new Promise(resolve => setTimeout(resolve, 1500))
+  connectionSteps.value[3].completed = true
+  connectionSteps.value[3].active = false
+  
+  // Hide loading after a brief moment
+  await new Promise(resolve => setTimeout(resolve, 1000))
+  isConnecting.value = false
+}
+
 // Select room function
-const selectRoom = (room: RoomWithOpenHoursAndDeviceAndUsers) => {
+const selectRoom = async (room: RoomWithOpenHoursAndDeviceAndUsers) => {
   // Close existing connection
   if (iotSocket.value) {
     iotSocket.value.close()
@@ -105,6 +156,9 @@ const selectRoom = (room: RoomWithOpenHoursAndDeviceAndUsers) => {
   selectedRoom.value = room
   deviceConnectedId.value = room.device?.id || `sim-device-${Date.now()}`
   showRoomSelector.value = false
+  
+  // Start connection loading sequence
+  await startConnectionSequence(room)
   
   // Wait a bit for device status to be available
   nextTick(() => {
@@ -350,7 +404,13 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4">
+  <LoadingScreen
+    v-if="isConnecting"
+    :steps="connectionSteps"
+    title="Simülasyon Cihazı"
+    subtitle="Odaya bağlanılıyor..."
+  />
+  <div v-else class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4">
     <Toast />
     <div class="max-w-6xl mx-auto">
       <!-- Header -->

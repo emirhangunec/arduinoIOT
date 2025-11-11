@@ -4,6 +4,44 @@ definePageMeta({
 })
 
 const deviceType = ref<string | null>(null)
+const isLoading = ref(true)
+
+const loadingSteps = ref([
+  { id: 'init', label: 'Sistem başlatılıyor...', icon: 'pi pi-spin pi-spinner', completed: false, active: false },
+  { id: 'network', label: 'Ağ bağlantısı kontrol ediliyor...', icon: 'pi pi-wifi', completed: false, active: false },
+  { id: 'devices', label: 'Cihazlar taranıyor...', icon: 'pi pi-server', completed: false, active: false },
+  { id: 'ready', label: 'Sistem hazır', icon: 'pi pi-check-circle', completed: false, active: false },
+])
+
+const startLoadingSequence = async () => {
+  // Step 1: Sistem başlatılıyor
+  loadingSteps.value[0].active = true
+  await new Promise(resolve => setTimeout(resolve, 1500))
+  loadingSteps.value[0].completed = true
+  loadingSteps.value[0].active = false
+
+  // Step 2: Ağ bağlantısı
+  loadingSteps.value[1].active = true
+  await new Promise(resolve => setTimeout(resolve, 1800))
+  loadingSteps.value[1].completed = true
+  loadingSteps.value[1].active = false
+
+  // Step 3: Cihazlar taranıyor
+  loadingSteps.value[2].active = true
+  await new Promise(resolve => setTimeout(resolve, 2000))
+  loadingSteps.value[2].completed = true
+  loadingSteps.value[2].active = false
+
+  // Step 4: Sistem hazır
+  loadingSteps.value[3].active = true
+  await new Promise(resolve => setTimeout(resolve, 1200))
+  loadingSteps.value[3].completed = true
+  loadingSteps.value[3].active = false
+
+  // Hide loading after a brief moment
+  await new Promise(resolve => setTimeout(resolve, 800))
+  isLoading.value = false
+}
 
 const selectDeviceType = (type: 'simulation' | 'management') => {
   deviceType.value = type
@@ -15,19 +53,30 @@ const selectDeviceType = (type: 'simulation' | 'management') => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   // Check if device type is already selected
   const stored = sessionStorage.getItem('deviceType')
   if (stored === 'simulation') {
     navigateTo('/simulation')
+    return
   } else if (stored === 'management') {
     navigateTo('/management')
+    return
   }
+
+  // Start loading sequence
+  await startLoadingSequence()
 })
 </script>
 
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+  <LoadingScreen
+    v-if="isLoading"
+    :steps="loadingSteps"
+    title="Akıllı Bina Yönetim Sistemi"
+    subtitle="Sistem başlatılıyor..."
+  />
+  <div v-else class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
     <div class="max-w-4xl w-full">
       <div class="text-center mb-12">
         <h1 class="text-5xl font-bold text-gray-800 mb-4">Akıllı Bina Yönetim Sistemi</h1>
