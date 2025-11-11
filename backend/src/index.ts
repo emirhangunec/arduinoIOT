@@ -4,7 +4,7 @@ import app from "./api";
 import ArduinoWebSocketServer from "./websockets/iot-websocket-server";
 import ClientWebsocketServer from "./websockets/client-websocket-server";
 import dotenv from 'dotenv';
-import {startMockScheduleWorker} from "@/schedule/mock-schedule-worker";
+import { startMockScheduleWorker } from "@/schedule/mock-schedule-worker";
 
 dotenv.config();
 const server = http.createServer(app);
