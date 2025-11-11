@@ -5,9 +5,9 @@ export default defineNuxtConfig({
     ssr: false,
     runtimeConfig: {
         public: {
-            backendUrl: process.env.BACKEND_URL || 'http://localhost:3001',
-            clientWebsocketUrl: process.env.CLIENT_WEBSOCKET_URL || 'http://localhost:3001',
-            iotWebsocketUrl: process.env.IOT_WEBSOCKET_URL || 'http://localhost:3001'
+            backendUrl: process.env.BACKEND_URL || 'http://46.62.241.130:3001',
+            clientWebsocketUrl: process.env.CLIENT_WEBSOCKET_URL || 'http://46.62.241.130:3001',
+            iotWebsocketUrl: process.env.IOT_WEBSOCKET_URL || 'http://46.62.241.130:3001'
         }
     },
     alias: {
