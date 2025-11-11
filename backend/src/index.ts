@@ -1,3 +1,4 @@
+import "./setup-buffer";
 import http from 'http';
 import app from "./api";
 import ArduinoWebSocketServer from "./websockets/iot-websocket-server";
