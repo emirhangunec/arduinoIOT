@@ -5,16 +5,16 @@ export default defineNuxtConfig({
     ssr: false,
     runtimeConfig: {
         public: {
-            backendUrl: process.env.BACKEND_URL || 'http://localhost:3001',
-            clientWebsocketUrl: process.env.CLIENT_WEBSOCKET_URL || 'http://localhost:3001',
-            iotWebsocketUrl: process.env.IOT_WEBSOCKET_URL || 'http://localhost:3001'
+            backendUrl: process.env.BACKEND_URL || 'http://0.0.0.0:3001',
+            clientWebsocketUrl: process.env.CLIENT_WEBSOCKET_URL || 'http://0.0.0.0:3001',
+            iotWebsocketUrl: process.env.IOT_WEBSOCKET_URL || 'http://0.0.0.0:3001'
         }
     },
     alias: {
         'PrismaTypes': '../backend/prisma/prisma.ts',
     },
     compatibilityDate: '2024-04-03',
-    devtools: {enabled: false},
+    devtools: { enabled: false },
     primevue: {
         options: {
             theme: {
@@ -48,7 +48,7 @@ export default defineNuxtConfig({
     },
     vite: {
         optimizeDeps: {
-            exclude: ['jwt-decode','exceljs']
+            exclude: ['jwt-decode', 'exceljs']
         }
     },
     shadcn: {
