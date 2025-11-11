@@ -1,8 +1,5 @@
-const PUBLIC_ROUTES = ['login', 'setup', 'forgot-password', 'reset-password']
+// Demo mode: bypass authentication
 export default defineNuxtRouteMiddleware(async (to, from) => {
-    const userStore = useAuthStore()
-    if (!to.name && to.name !== 'login') return navigateTo('/login')
-    if (!PUBLIC_ROUTES.includes(to.name.toString())) {
-        if (!userStore.isLoggedIn) return navigateTo('/login')
-    }
+    // All routes are public in demo mode
+    return
 })

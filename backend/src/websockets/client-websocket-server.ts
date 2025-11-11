@@ -55,6 +55,30 @@ eventHandler.on('heating-status', async (data: {
     });
 })
 
+eventHandler.on('light-status', async (data: {
+    id: string,
+    lightStatus: boolean
+}) => {
+    wss.clients.forEach((client) => {
+        client.send(JSON.stringify({
+            eventName: 'light-status',
+            data
+        }))
+    });
+})
+
+eventHandler.on('temperature-status', async (data: {
+    id: string,
+    temperature: number
+}) => {
+    wss.clients.forEach((client) => {
+        client.send(JSON.stringify({
+            eventName: 'temperature-status',
+            data
+        }))
+    });
+})
+
 wss.on('connection', (ws: WebSocket, request) => {
     ws.on('message', (message: string, isBinary) => {
             const parsedMessage = message.toString();
@@ -71,6 +95,13 @@ wss.on('connection', (ws: WebSocket, request) => {
                     eventHandler.emit('toggle-heating', {
                             deviceId: data.deviceId,
                             heatingStatus: data.heatingStatus
+                        }
+                    );
+                    break;
+                case 'toggle-light':
+                    eventHandler.emit('toggle-light', {
+                            deviceId: data.deviceId,
+                            lightStatus: data.lightStatus
                         }
                     );
                     break;

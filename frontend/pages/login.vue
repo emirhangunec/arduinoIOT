@@ -1,4 +1,13 @@
 <script setup lang="ts">
+definePageMeta({
+  layout: false,
+})
+
+// Demo mode: redirect to home immediately
+onMounted(() => {
+  navigateTo('/')
+})
+
 import {
 	FormControl,
 	FormDescription,

@@ -1,6 +1,7 @@
 import WebSocket, {WebSocketServer} from "ws";
 import {makeAllDevicesOffline, updateDevice, updateOrCreateDevice} from "@/helpers/device";
 import eventHandler from "@/events";
+import {updateDeviceStatus} from "@/mock-data";
 
 const onlineClientIds = new Set<string>();
 
@@ -13,6 +14,8 @@ interface IotWebSocket extends WebSocket {
     window: boolean | undefined;
     electricity: boolean | undefined;
     heating: boolean | undefined;
+    light: boolean | undefined;
+    temperature: number | undefined;
 }
 
 wss.on("connection", (ws: IotWebSocket, request) => {
@@ -37,17 +40,32 @@ wss.on("connection", (ws: IotWebSocket, request) => {
             case "window":
                 if (ws.id === undefined) return;
                 ws.window = parseInt(value) === 1;
+                updateDeviceStatus(ws.id, {windowStatus: ws.window} as any);
                 eventHandler.emit("window-status", {id: ws.id, window: ws.window});
                 break;
             case "electricity":
                 if (ws.id === undefined) return;
                 ws.electricity = parseInt(value) === 1;
+                updateDeviceStatus(ws.id, {electricityStatus: ws.electricity} as any);
                 eventHandler.emit("electricity-status", {id: ws.id, electricityStatus: ws.electricity});
                 break;
             case "heating":
                 if (ws.id === undefined) return;
                 ws.heating = parseInt(value) === 1;
+                updateDeviceStatus(ws.id, {heatingStatus: ws.heating} as any);
                 eventHandler.emit("heating-status", {id: ws.id, heatingStatus: ws.heating});
+                break;
+            case "light":
+                if (ws.id === undefined) return;
+                ws.light = parseInt(value) === 1;
+                updateDeviceStatus(ws.id, {lightStatus: ws.light} as any);
+                eventHandler.emit("light-status", {id: ws.id, lightStatus: ws.light});
+                break;
+            case "temperature":
+                if (ws.id === undefined) return;
+                ws.temperature = parseFloat(value);
+                updateDeviceStatus(ws.id, {temperature: ws.temperature} as any);
+                eventHandler.emit("temperature-status", {id: ws.id, temperature: ws.temperature});
                 break;
             default:
                 console.log(`user sended:${parsedData}`);
@@ -124,6 +142,15 @@ eventHandler.on("toggle-heating", async (data: { deviceId: string, heatingStatus
         const ws = client as IotWebSocket;
         if (ws.id === data.deviceId) {
             ws.send(`heating:${data.heatingStatus ? 1 : 0}`);
+        }
+    });
+})
+
+eventHandler.on("toggle-light", async (data: { deviceId: string, lightStatus: boolean }) => {
+    wss.clients.forEach((client) => {
+        const ws = client as IotWebSocket;
+        if (ws.id === data.deviceId) {
+            ws.send(`light:${data.lightStatus ? 1 : 0}`);
         }
     });
 })

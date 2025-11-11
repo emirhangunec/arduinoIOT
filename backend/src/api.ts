@@ -24,75 +24,15 @@ app.get('/', async (req, res) => {
 
 
 app.get('/company', async (req, res) => {
-    const company = await db.company.findFirst();
-    if (!company) {
-        return res.status(404).json({message: 'company not found'});
-    }
+    const {getCompany} = await import('./mock-data');
+    const company = getCompany();
     res.json({
         message: 'company found',
         data: {company}
     });
 })
 
-app.post('/setup', async (req, res) => {
-    const {name, email, password, companyName} = req.body;
-    let user, company;
-    try {
-
-        const hashedPassword = await hashPassword(password);
-
-        user = await db.user.create({
-            data: {
-                name,
-                email,
-                password: hashedPassword,
-                isAdmin: true,
-                role: {
-                    connect: {
-                        id: '1'
-                    }
-                }
-            },
-            include: {
-                role: {
-                    include: {
-                        privileges: true
-                    }
-                }
-            },
-        });
-
-
-    } catch (e) {
-        console.log(e);
-        return res.status(500).json({message: 'something went wrong on superadmin creation'});
-    }
-
-    try {
-        company = await db.company.create({
-            data: {
-                name: companyName
-            }
-        });
-    } catch (e) {
-        console.log(e);
-        return res.status(500).json({message: 'something went wrong on company creation'});
-    }
-    if (!user || !company) {
-        return res.status(500).json({message: 'something went wrong on superadmin or company creation'});
-    }
-
-    const {password: _, ...userWithoutPassword} = user;
-    const token = jwt.sign({user: userWithoutPassword}, 'mostsecuresecret');
-
-    res.json({
-        message: 'setup completed return to login page to login with superadmin credentials', data: {
-            company,
-            token
-        }
-    });
-
-})
+// Setup endpoint removed for demo mode
 
 app.post('/login', async (req, res) => {
     const {email, password} = req.body;

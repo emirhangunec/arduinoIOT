@@ -8,7 +8,8 @@ export default defineNuxtPlugin({
             baseURL: runtimeConfig.public.backendUrl,
             headers: {
                 // 'Content-Type': 'application/json',
-                'Authorization': token,
+                // Demo mode: token optional
+                ...(token ? { 'Authorization': token } : {}),
             }
         })
         return {

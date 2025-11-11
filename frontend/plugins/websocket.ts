@@ -1,11 +1,8 @@
 export default defineNuxtPlugin({
     setup() {
         const runtimeConfig = useRuntimeConfig()
-        const authStore = useAuthStore()
-        if (!authStore.isLoggedIn) {
-            return
-        }
-        const backendUrl = runtimeConfig.public.backendUrl.replace('http://', '')
+        // Demo mode: always connect
+        const backendUrl = runtimeConfig.public.backendUrl?.replace('http://', '') || 'localhost:3001'
         const socket = new WebSocket(`ws://${backendUrl}/client`);
         socket.onopen = () => {
             console.log('[WS] Connected to websocket server.');

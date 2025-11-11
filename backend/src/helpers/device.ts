@@ -1,53 +1,32 @@
-import db, {Device, DeviceWithRoomAndOpenHours} from 'db'
+import {Device, DeviceWithRoomAndOpenHours} from 'db';
+import {
+    updateOrCreateDevice as mockUpdateOrCreateDevice,
+    updateDeviceStatus as mockUpdateDeviceStatus,
+    getDeviceWithRoomAndOpenHours as mockGetDeviceWithRoomAndOpenHours,
+    makeAllDevicesOffline as mockMakeAllDevicesOffline,
+    getDeviceById
+} from '@/mock-data';
 
 export async function updateOrCreateDevice(id: string, ip: string, isOnline: boolean): Promise<Device> {
-    return db.device.upsert({
-        where: {
-            id
-        },
-        update: {
-            isOnline,
-            ip
-        },
-        create: {
-            id,
-            ip,
-            isOnline
-        }
-    });
+    return mockUpdateOrCreateDevice(id, ip, isOnline);
 }
 
 export async function updateDevice(id: string, data: Partial<Device>): Promise<Device> {
-    return db.device.update({
-        where: {
-            id
-        },
-        data
-    });
+    const device = getDeviceById(id);
+    if (!device) {
+        throw new Error('Device not found');
+    }
+    const updated = mockUpdateDeviceStatus(id, data);
+    if (!updated) {
+        throw new Error('Failed to update device');
+    }
+    return updated;
 }
 
 export async function getDeviceWithRoomAndOpenHours(deviceId: string): Promise<DeviceWithRoomAndOpenHours | null> {
-    return db.device.findUnique({
-        where: {
-            id: deviceId
-        },
-        include: {
-            room: {
-                include: {
-                    openHours: true
-                }
-            }
-        }
-    })
+    return mockGetDeviceWithRoomAndOpenHours(deviceId);
 }
 
 export async function makeAllDevicesOffline(): Promise<void> {
-    await db.device.updateMany({
-        where:{
-            isOnline: true
-        },
-        data: {
-            isOnline: false
-        }
-    });
+    mockMakeAllDevicesOffline();
 }
