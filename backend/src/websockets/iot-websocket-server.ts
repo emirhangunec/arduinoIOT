@@ -22,7 +22,10 @@ wss.on("connection", (ws: IotWebSocket, request) => {
     ws.ip = request.socket.remoteAddress;
     ws.on("message", async function message(data, isBinary) {
         const parsedData = data.toString();
-        const [key, value] = parsedData.split(":");
+        const parts = parsedData.split(":");
+        const key = parts[0];
+        const value = parts[1];
+        const meta = parts[2];
         ws.lastPing = Date.now();
         // console.log(`received: ${parsedData}`);
         switch (key) {
@@ -128,40 +131,55 @@ setInterval(() => {
 }, 5000)
 
 
-eventHandler.on("toggle-electricity", async (data: { deviceId: string, electricityStatus: boolean }) => {
+eventHandler.on("toggle-electricity", async (data: { deviceId: string, electricityStatus: boolean, source?: string }) => {
     wss.clients.forEach((client) => {
         const ws = client as IotWebSocket;
         if (ws.id === data.deviceId) {
-            ws.send(`electricity:${data.electricityStatus ? 1 : 0}`);
+            const payload = ["electricity", data.electricityStatus ? "1" : "0"];
+            if (data.source) {
+                payload.push(data.source);
+            }
+            ws.send(payload.join(":"));
         }
     });
+    updateDeviceStatus(data.deviceId, {electricityStatus: data.electricityStatus} as any);
 })
 
-eventHandler.on("toggle-heating", async (data: { deviceId: string, heatingStatus: boolean }) => {
+eventHandler.on("toggle-heating", async (data: { deviceId: string, heatingStatus: boolean, source?: string }) => {
     wss.clients.forEach((client) => {
         const ws = client as IotWebSocket;
         if (ws.id === data.deviceId) {
-            ws.send(`heating:${data.heatingStatus ? 1 : 0}`);
+            const payload = ["heating", data.heatingStatus ? "1" : "0"];
+            if (data.source) {
+                payload.push(data.source);
+            }
+            ws.send(payload.join(":"));
         }
     });
+    updateDeviceStatus(data.deviceId, {heatingStatus: data.heatingStatus} as any);
 })
 
-eventHandler.on("toggle-light", async (data: { deviceId: string, lightStatus: boolean }) => {
+eventHandler.on("toggle-light", async (data: { deviceId: string, lightStatus: boolean, source?: string }) => {
     wss.clients.forEach((client) => {
         const ws = client as IotWebSocket;
         if (ws.id === data.deviceId) {
-            ws.send(`light:${data.lightStatus ? 1 : 0}`);
+            const payload = ["light", data.lightStatus ? "1" : "0"];
+            if (data.source) {
+                payload.push(data.source);
+            }
+            ws.send(payload.join(":"));
         }
     });
+    updateDeviceStatus(data.deviceId, {lightStatus: data.lightStatus} as any);
 })
 
 eventHandler.on("send-data-to-device", async (data: {
     deviceId: string,
     data: { heater: boolean, electricity: boolean }
 }) => {
-    eventHandler.emit("toggle-electricity", {deviceId: data.deviceId, electricityStatus: data.data.electricity});
+    eventHandler.emit("toggle-electricity", {deviceId: data.deviceId, electricityStatus: data.data.electricity, source: 'schedule'});
     await new Promise(resolve => setTimeout(resolve, 10000));
-    eventHandler.emit("toggle-heating", {deviceId: data.deviceId, heatingStatus: data.data.heater});
+    eventHandler.emit("toggle-heating", {deviceId: data.deviceId, heatingStatus: data.data.heater, source: 'schedule'});
 
 })
 

@@ -9,8 +9,8 @@ const {$api, $socket} = useNuxtApp()
 const devicesStore = useDevicesStore()
 const toast = useToast()
 
-// Track last command received from management
-const lastCommand = ref<{type: string, value: any, timestamp: number} | null>(null)
+// Track last command received from management or schedule
+const lastCommand = ref<{type: string, value: any, timestamp: number, origin: 'schedule' | 'management' | 'device'} | null>(null)
 const currentTime = ref(Date.now())
 
 // Update current time for reactive highlighting
@@ -18,10 +18,29 @@ const timeInterval = setInterval(() => {
   currentTime.value = Date.now()
 }, 100)
 
-// Check if a command was recently received (for visual highlight)
-const isCommandRecent = (type: string) => {
-  if (!lastCommand.value || lastCommand.value.type !== type) return false
-  return currentTime.value - lastCommand.value.timestamp < 2000
+// Highlight helper for recent commands
+const scheduleHighlightClasses: Record<string, string> = {
+  electricity: 'ring-4 ring-blue-400 shadow-lg',
+  heating: 'ring-4 ring-red-400 shadow-lg',
+  light: 'ring-4 ring-yellow-400 shadow-lg'
+}
+
+const managementHighlightClasses: Record<string, string> = {
+  electricity: 'ring-2 ring-blue-200 shadow',
+  heating: 'ring-2 ring-red-200 shadow',
+  light: 'ring-2 ring-yellow-200 shadow'
+}
+
+const getCommandHighlightClass = (type: 'electricity' | 'heating' | 'light') => {
+  if (!lastCommand.value || lastCommand.value.type !== type) return ''
+  if (currentTime.value - lastCommand.value.timestamp >= 2000) return ''
+  if (lastCommand.value.origin === 'schedule') {
+    return scheduleHighlightClasses[type] || ''
+  }
+  if (lastCommand.value.origin === 'management') {
+    return managementHighlightClasses[type] || ''
+  }
+  return ''
 }
 
 // Get first available room for simulation
@@ -133,27 +152,38 @@ const connectToIoT = () => {
     // Send device ID
     iotSocket.value?.send(`id:${deviceConnectedId.value}`)
     console.log('[IoT WS] Connected as device:', deviceConnectedId.value)
+    
+    // Schedule worker will check schedule when device connects
+    // Wait a bit for backend to process the connection
+    setTimeout(() => {
+      console.log('[IoT WS] Device connected, schedule will be applied automatically if configured')
+    }, 3000)
+
+    startTemperatureSimulation()
   }
     
   iotSocket.value.onmessage = (event) => {
     const message = event.data.toString()
     console.log('[IoT WS] Received:', message)
     
-    // Parse commands from management panel
-    const [command, value] = message.split(':')
+    // Parse commands from management panel or schedule
+    const [command, value, meta] = message.split(':')
+    const origin: 'schedule' | 'management' | 'device' = meta === 'schedule' ? 'schedule' : meta === 'management' ? 'management' : 'device'
     
     switch (command) {
       case 'electricity':
         const newElectricityStatus = parseInt(value) === 1
         if (electricityStatus.value !== newElectricityStatus) {
           electricityStatus.value = newElectricityStatus
-          lastCommand.value = {type: 'electricity', value: newElectricityStatus, timestamp: Date.now()}
-          toast.add({
-            severity: 'info',
-            summary: 'Yönetim Paneli Komutu',
-            detail: `Elektrik ${newElectricityStatus ? 'açıldı' : 'kapatıldı'}`,
-            life: 3000
-          })
+          lastCommand.value = {type: 'electricity', value: newElectricityStatus, timestamp: Date.now(), origin}
+          if (origin !== 'device') {
+            toast.add({
+              severity: 'info',
+              summary: origin === 'schedule' ? 'Çizelge Komutu' : 'Yönetim Paneli Komutu',
+              detail: `Elektrik ${newElectricityStatus ? 'açıldı' : 'kapatıldı'}`,
+              life: 3000
+            })
+          }
         }
         // Update device status in store if available
         if (deviceStatus.value) {
@@ -167,13 +197,15 @@ const connectToIoT = () => {
         const newHeatingStatus = parseInt(value) === 1
         if (heatingStatus.value !== newHeatingStatus) {
           heatingStatus.value = newHeatingStatus
-          lastCommand.value = {type: 'heating', value: newHeatingStatus, timestamp: Date.now()}
-          toast.add({
-            severity: 'info',
-            summary: 'Yönetim Paneli Komutu',
-            detail: `Isıtma ${newHeatingStatus ? 'açıldı' : 'kapatıldı'}`,
-            life: 3000
-          })
+          lastCommand.value = {type: 'heating', value: newHeatingStatus, timestamp: Date.now(), origin}
+          if (origin !== 'device') {
+            toast.add({
+              severity: 'info',
+              summary: origin === 'schedule' ? 'Çizelge Komutu' : 'Yönetim Paneli Komutu',
+              detail: `Isıtma ${newHeatingStatus ? 'açıldı' : 'kapatıldı'}`,
+              life: 3000
+            })
+          }
         }
         if (deviceStatus.value) {
           const status = devicesStore.deviceStatus.find(s => s.deviceId === deviceId.value)
@@ -186,13 +218,15 @@ const connectToIoT = () => {
         const newLightStatus = parseInt(value) === 1
         if (lightStatus.value !== newLightStatus) {
           lightStatus.value = newLightStatus
-          lastCommand.value = {type: 'light', value: newLightStatus, timestamp: Date.now()}
-          toast.add({
-            severity: 'info',
-            summary: 'Yönetim Paneli Komutu',
-            detail: `Işık ${newLightStatus ? 'açıldı' : 'kapatıldı'}`,
-            life: 3000
-          })
+          lastCommand.value = {type: 'light', value: newLightStatus, timestamp: Date.now(), origin}
+          if (origin !== 'device') {
+            toast.add({
+              severity: 'info',
+              summary: origin === 'schedule' ? 'Çizelge Komutu' : 'Yönetim Paneli Komutu',
+              detail: `Işık ${newLightStatus ? 'açıldı' : 'kapatıldı'}`,
+              life: 3000
+            })
+          }
         }
         if (deviceStatus.value) {
           const status = devicesStore.deviceStatus.find(s => s.deviceId === deviceId.value)
@@ -213,6 +247,10 @@ const connectToIoT = () => {
   iotSocket.value.onclose = () => {
     isConnected.value = false
     console.log('[IoT WS] Connection closed')
+    if (temperatureSimulationInterval) {
+      clearInterval(temperatureSimulationInterval)
+      temperatureSimulationInterval = null
+    }
   }
   
   iotSocket.value.onerror = (error) => {
@@ -252,16 +290,50 @@ const sendLightStatus = () => {
   }
 }
 
-const sendTemperature = () => {
+const sendTemperature = (value?: number) => {
   if (iotSocket.value && isConnected.value) {
-    iotSocket.value.send(`temperature:${temperature.value}`)
+    const tempToSend = typeof value === 'number' ? value : temperature.value
+    iotSocket.value.send(`temperature:${tempToSend}`)
   }
 }
 
-// Auto-send temperature updates
-watch(temperature, () => {
-  sendTemperature()
-})
+const updateTemperature = (value: number | null | undefined, source: 'manual' | 'simulation' = 'manual') => {
+  if (value === null || value === undefined || Number.isNaN(value)) return
+  const clamped = Math.max(15, Math.min(35, value))
+  const rounded = Number(clamped.toFixed(2))
+  temperature.value = rounded
+  sendTemperature(rounded)
+  const status = devicesStore.deviceStatus.find(s => s.deviceId === deviceId.value)
+  if (status) {
+    status.temperature = rounded
+  }
+}
+
+let temperatureSimulationInterval: ReturnType<typeof setInterval> | null = null
+
+const startTemperatureSimulation = () => {
+  if (temperatureSimulationInterval) {
+    clearInterval(temperatureSimulationInterval)
+  }
+  temperatureSimulationInterval = setInterval(() => {
+    const current = temperature.value
+    const ambient = 22 + Math.sin(Date.now() / 600000) * 0.5
+    let delta = (Math.random() - 0.5) * 0.1
+
+    if (electricityStatus.value && heatingStatus.value) {
+      delta += 0.4 + Math.random() * 0.2
+    } else {
+      if (current > ambient) {
+        delta -= 0.15 + Math.random() * 0.1
+      } else {
+        delta += (Math.random() - 0.5) * 0.05
+      }
+    }
+
+    const nextTemperature = Math.max(15, Math.min(35, current + delta))
+    updateTemperature(nextTemperature, 'simulation')
+  }, 5000)
+}
 
 onUnmounted(() => {
   if (iotSocket.value) {
@@ -269,6 +341,10 @@ onUnmounted(() => {
   }
   if (timeInterval) {
     clearInterval(timeInterval)
+  }
+  if (temperatureSimulationInterval) {
+    clearInterval(temperatureSimulationInterval)
+    temperatureSimulationInterval = null
   }
 })
 </script>
@@ -435,7 +511,7 @@ onUnmounted(() => {
         <!-- Electricity Control -->
         <div 
           class="bg-white rounded-lg shadow-md p-6 transition-all duration-300"
-          :class="isCommandRecent('electricity') ? 'ring-4 ring-blue-400 shadow-lg' : ''"
+          :class="getCommandHighlightClass('electricity')"
         >
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-xl font-semibold text-gray-800">Elektrik</h3>
@@ -454,7 +530,7 @@ onUnmounted(() => {
         <!-- Heating Control -->
         <div 
           class="bg-white rounded-lg shadow-md p-6 transition-all duration-300"
-          :class="isCommandRecent('heating') ? 'ring-4 ring-red-400 shadow-lg' : ''"
+          :class="getCommandHighlightClass('heating')"
         >
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-xl font-semibold text-gray-800">Isıtma</h3>
@@ -473,7 +549,7 @@ onUnmounted(() => {
         <!-- Light Control -->
         <div 
           class="bg-white rounded-lg shadow-md p-6 transition-all duration-300"
-          :class="isCommandRecent('light') ? 'ring-4 ring-yellow-400 shadow-lg' : ''"
+          :class="getCommandHighlightClass('light')"
         >
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-xl font-semibold text-gray-800">Işık</h3>
@@ -503,16 +579,16 @@ onUnmounted(() => {
             </div>
             <div class="flex items-center gap-4">
               <InputNumber 
-                v-model="temperature" 
+                :modelValue="temperature" 
                 :min="10" 
                 :max="35" 
                 :step="0.1"
-                @update:modelValue="sendTemperature"
+                @update:modelValue="value => updateTemperature(value ?? temperature.value)"
                 class="flex-1"
               />
               <Button 
                 icon="pi pi-send" 
-                @click="sendTemperature"
+                @click="() => updateTemperature(temperature.value, 'manual')"
                 label="Gönder"
                 outlined
               />

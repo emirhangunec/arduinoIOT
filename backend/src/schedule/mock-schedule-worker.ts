@@ -8,6 +8,7 @@ interface Schedule {
     closeHour: string;
     isElectricityOn: boolean;
     isHeaterOn: boolean;
+    targetTemperature?: number | null;
 }
 
 // Track last applied state for each room to avoid duplicate commands
@@ -15,6 +16,7 @@ const lastAppliedState = new Map<string, {
     electricityOn: boolean;
     heaterOn: boolean;
     isInSchedule: boolean;
+    lastKnownTemperature?: number;
 }>();
 
 // Get current day of week (0 = Monday, 6 = Sunday)
@@ -40,7 +42,11 @@ const applySchedule = (schedule: Schedule, isInSchedule: boolean) => {
     const room = getAllRooms().find(r => r.id === schedule.roomId);
     if (!room || !room.device) return;
     
-    const device = getDeviceById(room.device.id);
+    const device = getDeviceById(room.device.id) as (ReturnType<typeof getDeviceById> & {
+        temperature?: number;
+        electricityStatus?: boolean;
+        heatingStatus?: boolean;
+    }) | null;
     if (!device || !device.isOnline) return;
     
     const roomStateKey = room.id;
@@ -48,7 +54,24 @@ const applySchedule = (schedule: Schedule, isInSchedule: boolean) => {
     
     // Determine target state
     const targetElectricity = isInSchedule ? (schedule.isElectricityOn || false) : false;
-    const targetHeater = isInSchedule ? (schedule.isHeaterOn || false) : false;
+    let targetHeater = isInSchedule ? (schedule.isHeaterOn || false) : false;
+
+    if (isInSchedule && targetHeater && typeof (schedule as any).targetTemperature === "number" && !Number.isNaN((schedule as any).targetTemperature)) {
+        const desiredTemperature = (schedule as any).targetTemperature as number;
+        const tolerance = 0.5;
+        const currentTemperature = typeof (device as any).temperature === "number"
+            ? (device as any).temperature as number
+            : lastState?.lastKnownTemperature;
+        if (typeof currentTemperature === "number") {
+            if (currentTemperature < desiredTemperature - tolerance) {
+                targetHeater = true;
+            } else if (currentTemperature > desiredTemperature + tolerance) {
+                targetHeater = false;
+            } else {
+                targetHeater = lastState?.heaterOn ?? (schedule.isHeaterOn || false);
+            }
+        }
+    }
     
     // Check if state changed
     const stateChanged = !lastState || 
@@ -62,21 +85,23 @@ const applySchedule = (schedule: Schedule, isInSchedule: boolean) => {
     }
     
     // Get current device status directly from device
-    const currentElectricity = device.electricityStatus || false;
-    const currentHeater = device.heatingStatus || false;
+    const currentElectricity = (device as any).electricityStatus || false;
+    const currentHeater = (device as any).heatingStatus || false;
     
     // Only send commands if target state differs from current state
     if (currentElectricity !== targetElectricity) {
         eventHandler.emit('toggle-electricity', {
             deviceId: device.id,
-            electricityStatus: targetElectricity
+            electricityStatus: targetElectricity,
+            source: 'schedule'
         });
     }
     
     if (currentHeater !== targetHeater) {
         eventHandler.emit('toggle-heating', {
             deviceId: device.id,
-            heatingStatus: targetHeater
+            heatingStatus: targetHeater,
+            source: 'schedule'
         });
     }
     
@@ -84,86 +109,102 @@ const applySchedule = (schedule: Schedule, isInSchedule: boolean) => {
     lastAppliedState.set(roomStateKey, {
         electricityOn: targetElectricity,
         heaterOn: targetHeater,
-        isInSchedule: isInSchedule
+        isInSchedule: isInSchedule,
+        lastKnownTemperature: typeof (device as any).temperature === "number"
+            ? (device as any).temperature as number
+            : lastState?.lastKnownTemperature
     });
 }
+
+const evaluateRoomSchedule = (room: ReturnType<typeof getAllRooms>[number], now: Date, dayOfWeek: number) => {
+    if (!room.openHours || room.openHours.length === 0) {
+        const roomStateKey = room.id;
+        const lastState = lastAppliedState.get(roomStateKey);
+        if (lastState && lastState.isInSchedule) {
+            if (room.device && room.device.isOnline) {
+                eventHandler.emit('toggle-electricity', {
+                    deviceId: room.device.id,
+                    electricityStatus: false,
+                    source: 'schedule'
+                });
+                eventHandler.emit('toggle-heating', {
+                    deviceId: room.device.id,
+                    heatingStatus: false,
+                    source: 'schedule'
+                });
+            }
+            lastAppliedState.set(roomStateKey, {
+                electricityOn: false,
+                heaterOn: false,
+                isInSchedule: false,
+                lastKnownTemperature: typeof (room.device as any)?.temperature === "number"
+                    ? ((room.device as any).temperature as number)
+                    : lastState?.lastKnownTemperature
+            });
+        }
+        return;
+    }
+
+    const todaySchedule = room.openHours.find(
+        (oh: any) => oh.dayOfWeek === dayOfWeek
+    );
+
+    const roomStateKey = room.id;
+
+    if (!todaySchedule) {
+        const lastState = lastAppliedState.get(roomStateKey);
+        if (lastState && lastState.isInSchedule) {
+            if (room.device && room.device.isOnline) {
+                eventHandler.emit('toggle-electricity', {
+                    deviceId: room.device.id,
+                    electricityStatus: false,
+                    source: 'schedule'
+                });
+                eventHandler.emit('toggle-heating', {
+                    deviceId: room.device.id,
+                    heatingStatus: false,
+                    source: 'schedule'
+                });
+            }
+            lastAppliedState.set(roomStateKey, {
+                electricityOn: false,
+                heaterOn: false,
+                isInSchedule: false,
+                lastKnownTemperature: typeof (room.device as any)?.temperature === "number"
+                    ? ((room.device as any).temperature as number)
+                    : lastState?.lastKnownTemperature
+            });
+        }
+        return;
+    }
+
+    const isInSchedule = isBetween(now, todaySchedule.openHour, todaySchedule.closeHour);
+
+    applySchedule({
+        roomId: room.id,
+        dayOfWeek: todaySchedule.dayOfWeek,
+        openHour: todaySchedule.openHour,
+        closeHour: todaySchedule.closeHour,
+        isElectricityOn: todaySchedule.isElectricityOn || false,
+        isHeaterOn: todaySchedule.isHeaterOn || false
+    }, isInSchedule);
+};
+
+const checkScheduleForRoom = (roomId: string) => {
+    const room = getAllRooms().find(r => r.id === roomId);
+    if (!room) return;
+    const now = new Date();
+    const dayOfWeek = getDayOfWeek(now);
+    evaluateRoomSchedule(room, now, dayOfWeek);
+};
 
 // Check and apply schedules
 const checkSchedules = () => {
     const now = new Date();
     const dayOfWeek = getDayOfWeek(now);
-    
     const rooms = getAllRooms();
-    
-    rooms.forEach(room => {
-        if (!room.openHours || room.openHours.length === 0) {
-            // No schedule - ensure we track this
-            const roomStateKey = room.id;
-            const lastState = lastAppliedState.get(roomStateKey);
-            if (lastState && lastState.isInSchedule) {
-                // Was in schedule, now no schedule - turn off
-                if (room.device && room.device.isOnline) {
-                    eventHandler.emit('toggle-electricity', {
-                        deviceId: room.device.id,
-                        electricityStatus: false
-                    });
-                    eventHandler.emit('toggle-heating', {
-                        deviceId: room.device.id,
-                        heatingStatus: false
-                    });
-                }
-                lastAppliedState.set(roomStateKey, {
-                    electricityOn: false,
-                    heaterOn: false,
-                    isInSchedule: false
-                });
-            }
-            return;
-        }
-        
-        // Find today's schedule
-        const todaySchedule = room.openHours.find(
-            (oh: any) => oh.dayOfWeek === dayOfWeek
-        );
-        
-        if (!todaySchedule) {
-            // No schedule for today - turn off if was in schedule
-            const roomStateKey = room.id;
-            const lastState = lastAppliedState.get(roomStateKey);
-            if (lastState && lastState.isInSchedule) {
-                if (room.device && room.device.isOnline) {
-                    eventHandler.emit('toggle-electricity', {
-                        deviceId: room.device.id,
-                        electricityStatus: false
-                    });
-                    eventHandler.emit('toggle-heating', {
-                        deviceId: room.device.id,
-                        heatingStatus: false
-                    });
-                }
-                lastAppliedState.set(roomStateKey, {
-                    electricityOn: false,
-                    heaterOn: false,
-                    isInSchedule: false
-                });
-            }
-            return;
-        }
-        
-        // Check if current time is within schedule
-        const isInSchedule = isBetween(now, todaySchedule.openHour, todaySchedule.closeHour);
-        
-        // Apply schedule
-        applySchedule({
-            roomId: room.id,
-            dayOfWeek: todaySchedule.dayOfWeek,
-            openHour: todaySchedule.openHour,
-            closeHour: todaySchedule.closeHour,
-            isElectricityOn: todaySchedule.isElectricityOn || false,
-            isHeaterOn: todaySchedule.isHeaterOn || false
-        }, isInSchedule);
-    });
-}
+    rooms.forEach(room => evaluateRoomSchedule(room, now, dayOfWeek));
+};
 
 // Start schedule worker
 export function startMockScheduleWorker() {
@@ -183,6 +224,18 @@ export function startMockScheduleWorker() {
         setTimeout(() => {
             checkSchedules();
         }, 2000); // Wait 2 seconds for device to be ready
+    });
+
+    // Re-evaluate schedules when they are updated from management panel
+    eventHandler.on('room-schedule-updated', (roomId?: string) => {
+        console.log('[Schedule Worker] Room schedule updated:', roomId);
+        if (roomId) {
+            lastAppliedState.delete(roomId);
+            setTimeout(() => checkScheduleForRoom(roomId), 500);
+        } else {
+            lastAppliedState.clear();
+            setTimeout(() => checkSchedules(), 500);
+        }
     });
 }
 

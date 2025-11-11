@@ -87,21 +87,24 @@ wss.on('connection', (ws: WebSocket, request) => {
                 case 'toggle-electricity':
                     eventHandler.emit('toggle-electricity', {
                             deviceId: data.deviceId,
-                            electricityStatus: data.electricityStatus
+                            electricityStatus: data.electricityStatus,
+                            source: 'management'
                         }
                     );
                     break;
                 case 'toggle-heating':
                     eventHandler.emit('toggle-heating', {
                             deviceId: data.deviceId,
-                            heatingStatus: data.heatingStatus
+                            heatingStatus: data.heatingStatus,
+                            source: 'management'
                         }
                     );
                     break;
                 case 'toggle-light':
                     eventHandler.emit('toggle-light', {
                             deviceId: data.deviceId,
-                            lightStatus: data.lightStatus
+                            lightStatus: data.lightStatus,
+                            source: 'management'
                         }
                     );
                     break;

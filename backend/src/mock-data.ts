@@ -1,4 +1,5 @@
 import type {Device, Room, DeviceWithRoomAndOpenHours, RoomWithOpenHoursAndDeviceAndUsers} from 'db';
+import eventHandler from "@/events";
 
 interface MockDevice extends Device {
     windowStatus?: boolean;
@@ -181,6 +182,7 @@ export function updateRoomOpenHours(roomId: string, openHours: Array<{
     closeHour: string;
     isElectricityOn: boolean;
     isHeaterOn: boolean;
+    targetTemperature?: number | null;
 }>): boolean {
     const room = rooms.get(roomId);
     if (!room) return false;
@@ -193,8 +195,11 @@ export function updateRoomOpenHours(roomId: string, openHours: Array<{
         closeHour: oh.closeHour,
         isElectricityOn: oh.isElectricityOn,
         isHeaterOn: oh.isHeaterOn,
+        targetTemperature: typeof oh.targetTemperature === "number" ? oh.targetTemperature : null,
         roomId: roomId
     }));
+    
+    eventHandler.emit('room-schedule-updated', roomId);
     
     return true;
 }

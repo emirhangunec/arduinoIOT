@@ -168,6 +168,7 @@ const scheduleData = ref<Array<{
   closeHour: string
   isElectricityOn: boolean
   isHeaterOn: boolean
+  targetTemperature: number | null
 }>>([])
 
 const dayNames = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar']
@@ -181,7 +182,10 @@ const openScheduleDialog = (room: RoomWithOpenHoursAndDeviceAndUsers) => {
       openHour: oh.openHour,
       closeHour: oh.closeHour,
       isElectricityOn: oh.isElectricityOn || false,
-      isHeaterOn: oh.isHeaterOn || false
+      isHeaterOn: oh.isHeaterOn || false,
+      targetTemperature: typeof (oh as any).targetTemperature === 'number'
+        ? (oh as any).targetTemperature
+        : (oh.isHeaterOn ? 24 : null)
     }))
   } else {
     // Create empty schedule for all days
@@ -190,7 +194,8 @@ const openScheduleDialog = (room: RoomWithOpenHoursAndDeviceAndUsers) => {
       openHour: '09:00',
       closeHour: '17:00',
       isElectricityOn: false,
-      isHeaterOn: false
+      isHeaterOn: false,
+      targetTemperature: null
     }))
   }
   showScheduleDialog.value = true
@@ -203,7 +208,14 @@ const saveSchedule = async () => {
     const response = await $api(`rooms/${selectedRoomForSchedule.value.id}`, {
       method: 'PUT',
       body: {
-        openHours: scheduleData.value
+        openHours: scheduleData.value.map(day => ({
+          dayOfWeek: day.dayOfWeek,
+          openHour: day.openHour,
+          closeHour: day.closeHour,
+          isElectricityOn: day.isElectricityOn,
+          isHeaterOn: day.isHeaterOn,
+          targetTemperature: day.isHeaterOn ? (day.targetTemperature ?? 24) : null
+        }))
       }
     })
     
@@ -546,18 +558,36 @@ const saveSchedule = async () => {
             <div class="flex items-center gap-2">
               <Checkbox 
                 v-model="day.isElectricityOn" 
-                inputId="electricity"
+                :inputId="`electricity-${day.dayOfWeek}`"
                 :binary="true"
               />
-              <label for="electricity" class="text-sm text-gray-700">Elektrik Açık</label>
+              <label :for="`electricity-${day.dayOfWeek}`" class="text-sm text-gray-700">Elektrik Açık</label>
             </div>
             <div class="flex items-center gap-2">
               <Checkbox 
                 v-model="day.isHeaterOn" 
-                inputId="heater"
+                :inputId="`heater-${day.dayOfWeek}`"
                 :binary="true"
+                @change="(e) => day.targetTemperature = e.checked ? (day.targetTemperature ?? 24) : null"
               />
-              <label for="heater" class="text-sm text-gray-700">Isıtma Açık</label>
+              <label :for="`heater-${day.dayOfWeek}`" class="text-sm text-gray-700">Isıtma Açık</label>
+            </div>
+            <div v-if="day.isHeaterOn" class="flex items-center gap-2">
+              <label class="text-sm text-gray-600">Hedef Sıcaklık:</label>
+              <InputNumber 
+                v-model="day.targetTemperature"
+                :min="15"
+                :max="30"
+                :step="0.5"
+                suffix="°C"
+                showButtons
+                buttonLayout="horizontal"
+                decrementButtonClass="p-button-outlined p-button-secondary"
+                incrementButtonClass="p-button-outlined p-button-secondary"
+                decrementButtonIcon="pi pi-minus"
+                incrementButtonIcon="pi pi-plus"
+                class="w-40"
+              />
             </div>
           </div>
         </div>
