@@ -249,7 +249,7 @@ const connectToIoT = () => {
     const backendUrl =
         runtimeConfig.public.iotWebsocketUrl?.replace("http://", "") ||
         runtimeConfig.public.backendUrl?.replace("http://", "") ||
-        "0.0.0.0:3001";
+        "localhost:3001";
     iotSocket.value = new WebSocket(`ws://${backendUrl}/iot`);
 
     iotSocket.value.onopen = () => {

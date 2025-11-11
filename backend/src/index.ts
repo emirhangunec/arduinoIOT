@@ -25,7 +25,7 @@ server.on('upgrade', (request, socket, head) => {
 const PORT = process.env.BACKEND_PORT ?? 3001;
 
 server.listen(PORT, () => {
-    console.log(`Sunucu http://0.0.0.0:${PORT} adresinde çalışıyor.`);
+    console.log(`Sunucu http://localhost:${PORT} adresinde çalışıyor.`);
     // Start mock schedule worker for demo mode
     startMockScheduleWorker();
 });
