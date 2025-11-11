@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn -r tsconfig-paths/register src/index.ts",
+    "dev": "ts-node-dev --respawn -r ./setup-buffer.js -r tsconfig-paths/register src/index.ts",
     "db:push": "npx prisma db push",
     "studio": "npx prisma studio",
     "seed": "ts-node-dev prisma/seed.ts"
