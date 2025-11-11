@@ -56,20 +56,95 @@ const getRoomDeviceStatus = (room: RoomWithOpenHoursAndDeviceAndUsers) => {
   return devicesStore.getDeviceStatus(room.device.id)
 }
 
-// Control functions
-const toggleRoomElectricity = (room: RoomWithOpenHoursAndDeviceAndUsers) => {
+// Control functions - these receive the new value from ToggleSwitch
+const toggleRoomElectricity = (room: RoomWithOpenHoursAndDeviceAndUsers, newValue: boolean) => {
   if (!room.device) return
-  devicesStore.toggleElectricity(room.device.id)
+  
+  // Update device status immediately
+  const status = devicesStore.deviceStatus.find(s => s.deviceId === room.device.id)
+  if (status) {
+    status.electricityStatus = newValue
+  } else {
+    // Create status if doesn't exist
+    devicesStore.deviceStatus.push({
+      deviceId: room.device.id,
+      windowStatus: false,
+      electricityStatus: newValue,
+      heatingStatus: false,
+      lightStatus: false,
+      temperature: 20,
+      isBusy: false
+    })
+  }
+  
+  // Send command via WebSocket
+  const dataToSend = {
+    eventName: 'toggle-electricity',
+    deviceId: room.device.id,
+    electricityStatus: newValue
+  }
+  const {$socket} = useNuxtApp()
+  if ($socket && $socket.readyState === WebSocket.OPEN) {
+    $socket.send(JSON.stringify(dataToSend))
+  }
 }
 
-const toggleRoomHeating = (room: RoomWithOpenHoursAndDeviceAndUsers) => {
+const toggleRoomHeating = (room: RoomWithOpenHoursAndDeviceAndUsers, newValue: boolean) => {
   if (!room.device) return
-  devicesStore.toggleHeating(room.device.id)
+  
+  const status = devicesStore.deviceStatus.find(s => s.deviceId === room.device.id)
+  if (status) {
+    status.heatingStatus = newValue
+  } else {
+    devicesStore.deviceStatus.push({
+      deviceId: room.device.id,
+      windowStatus: false,
+      electricityStatus: false,
+      heatingStatus: newValue,
+      lightStatus: false,
+      temperature: 20,
+      isBusy: false
+    })
+  }
+  
+  const dataToSend = {
+    eventName: 'toggle-heating',
+    deviceId: room.device.id,
+    heatingStatus: newValue
+  }
+  const {$socket} = useNuxtApp()
+  if ($socket && $socket.readyState === WebSocket.OPEN) {
+    $socket.send(JSON.stringify(dataToSend))
+  }
 }
 
-const toggleRoomLight = (room: RoomWithOpenHoursAndDeviceAndUsers) => {
+const toggleRoomLight = (room: RoomWithOpenHoursAndDeviceAndUsers, newValue: boolean) => {
   if (!room.device) return
-  devicesStore.toggleLight(room.device.id)
+  
+  const status = devicesStore.deviceStatus.find(s => s.deviceId === room.device.id)
+  if (status) {
+    status.lightStatus = newValue
+  } else {
+    devicesStore.deviceStatus.push({
+      deviceId: room.device.id,
+      windowStatus: false,
+      electricityStatus: false,
+      heatingStatus: false,
+      lightStatus: newValue,
+      temperature: 20,
+      isBusy: false
+    })
+  }
+  
+  const dataToSend = {
+    eventName: 'toggle-light',
+    deviceId: room.device.id,
+    lightStatus: newValue
+  }
+  const {$socket} = useNuxtApp()
+  if ($socket && $socket.readyState === WebSocket.OPEN) {
+    $socket.send(JSON.stringify(dataToSend))
+  }
 }
 
 // Auto-refresh
@@ -83,17 +158,88 @@ onMounted(() => {
 const floors = computed(() => {
   return Object.keys(roomsByFloor.value).sort((a, b) => parseInt(b) - parseInt(a))
 })
+
+// Schedule Dialog
+const showScheduleDialog = ref(false)
+const selectedRoomForSchedule = ref<RoomWithOpenHoursAndDeviceAndUsers | null>(null)
+const scheduleData = ref<Array<{
+  dayOfWeek: number
+  openHour: string
+  closeHour: string
+  isElectricityOn: boolean
+  isHeaterOn: boolean
+}>>([])
+
+const dayNames = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar']
+
+const openScheduleDialog = (room: RoomWithOpenHoursAndDeviceAndUsers) => {
+  selectedRoomForSchedule.value = room
+  // Initialize schedule data from existing openHours or create empty
+  if (room.openHours && room.openHours.length > 0) {
+    scheduleData.value = room.openHours.map(oh => ({
+      dayOfWeek: oh.dayOfWeek,
+      openHour: oh.openHour,
+      closeHour: oh.closeHour,
+      isElectricityOn: oh.isElectricityOn || false,
+      isHeaterOn: oh.isHeaterOn || false
+    }))
+  } else {
+    // Create empty schedule for all days
+    scheduleData.value = Array.from({length: 7}, (_, i) => ({
+      dayOfWeek: i,
+      openHour: '09:00',
+      closeHour: '17:00',
+      isElectricityOn: false,
+      isHeaterOn: false
+    }))
+  }
+  showScheduleDialog.value = true
+}
+
+const saveSchedule = async () => {
+  if (!selectedRoomForSchedule.value) return
+  
+  try {
+    const response = await $api(`rooms/${selectedRoomForSchedule.value.id}`, {
+      method: 'PUT',
+      body: {
+        openHours: scheduleData.value
+      }
+    })
+    
+    if (response) {
+      showScheduleDialog.value = false
+      refresh()
+      const toast = useToast()
+      toast.add({
+        severity: 'success',
+        summary: 'Başarılı',
+        detail: 'Çizelge başarıyla güncellendi',
+        life: 3000
+      })
+    }
+  } catch (error) {
+    console.error('Error saving schedule:', error)
+    const toast = useToast()
+    toast.add({
+      severity: 'error',
+      summary: 'Hata',
+      detail: 'Çizelge kaydedilirken hata oluştu',
+      life: 3000
+    })
+  }
+}
 </script>
 
 <template>
   <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
     <!-- Header -->
-    <div class="bg-white shadow-md sticky top-0 z-10">
-      <div class="max-w-7xl mx-auto px-4 py-4">
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 shadow-xl sticky top-0 z-10">
+      <div class="max-w-7xl mx-auto px-4 py-6">
         <div class="flex items-center justify-between">
           <div>
-            <h1 class="text-3xl font-bold text-gray-800">Yönetim Paneli</h1>
-            <p class="text-gray-600">20 Katlı Bina - {{ rooms.length }} Oda</p>
+            <h1 class="text-4xl font-bold text-white mb-2">Akıllı Bina Yönetim Sistemi</h1>
+            <p class="text-blue-100 text-lg">20 Katlı Bina - {{ rooms.length }} Oda</p>
           </div>
           <div class="flex items-center gap-4">
             <IconField>
@@ -111,6 +257,7 @@ const floors = computed(() => {
               icon="pi pi-home" 
               @click="navigateTo('/')"
               outlined
+              severity="secondary"
             />
           </div>
         </div>
@@ -309,7 +456,7 @@ const floors = computed(() => {
                         <span class="text-xs text-gray-600">Elektrik</span>
                         <ToggleSwitch 
                           :modelValue="getRoomDeviceStatus(room)?.electricityStatus || false"
-                          @update:modelValue="toggleRoomElectricity(room)"
+                          @update:modelValue="(val) => toggleRoomElectricity(room, val)"
                           :disabled="!room.device.isOnline || devicesStore.isDeviceBusy(room.device.id)"
                         />
                       </div>
@@ -319,7 +466,7 @@ const floors = computed(() => {
                         <span class="text-xs text-gray-600">Isıtma</span>
                         <ToggleSwitch 
                           :modelValue="getRoomDeviceStatus(room)?.heatingStatus || false"
-                          @update:modelValue="toggleRoomHeating(room)"
+                          @update:modelValue="(val) => toggleRoomHeating(room, val)"
                           :disabled="!room.device.isOnline || devicesStore.isDeviceBusy(room.device.id)"
                         />
                       </div>
@@ -329,7 +476,7 @@ const floors = computed(() => {
                         <span class="text-xs text-gray-600">Işık</span>
                         <ToggleSwitch 
                           :modelValue="getRoomDeviceStatus(room)?.lightStatus || false"
-                          @update:modelValue="toggleRoomLight(room)"
+                          @update:modelValue="(val) => toggleRoomLight(room, val)"
                           :disabled="!room.device.isOnline || devicesStore.isDeviceBusy(room.device.id)"
                         />
                       </div>
@@ -341,12 +488,85 @@ const floors = computed(() => {
                     <span class="text-sm text-red-500">Cihaz Yok</span>
                   </div>
                 </div>
+                
+                <!-- Schedule Button -->
+                <div class="mt-3 pt-3 border-t border-gray-200">
+                  <Button 
+                    label="Çizelge" 
+                    icon="pi pi-calendar" 
+                    @click="openScheduleDialog(room)"
+                    size="small"
+                    outlined
+                    severity="secondary"
+                    class="w-full"
+                  />
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Schedule Dialog -->
+    <Dialog 
+      v-model:visible="showScheduleDialog" 
+      modal 
+      :header="`Çizelge - ${selectedRoomForSchedule?.name || ''}`" 
+      :style="{ width: '700px' }"
+    >
+      <div v-if="selectedRoomForSchedule" class="space-y-4">
+        <div 
+          v-for="(day, index) in scheduleData" 
+          :key="index"
+          class="border rounded-lg p-4"
+        >
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-semibold text-gray-800">{{ dayNames[day.dayOfWeek] }}</h3>
+            <div class="flex items-center gap-4">
+              <div class="flex items-center gap-2">
+                <label class="text-sm text-gray-600">Açılış:</label>
+                <InputText 
+                  v-model="day.openHour" 
+                  type="time"
+                  class="w-32"
+                />
+              </div>
+              <div class="flex items-center gap-2">
+                <label class="text-sm text-gray-600">Kapanış:</label>
+                <InputText 
+                  v-model="day.closeHour" 
+                  type="time"
+                  class="w-32"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2">
+              <Checkbox 
+                v-model="day.isElectricityOn" 
+                inputId="electricity"
+                :binary="true"
+              />
+              <label for="electricity" class="text-sm text-gray-700">Elektrik Açık</label>
+            </div>
+            <div class="flex items-center gap-2">
+              <Checkbox 
+                v-model="day.isHeaterOn" 
+                inputId="heater"
+                :binary="true"
+              />
+              <label for="heater" class="text-sm text-gray-700">Isıtma Açık</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <Button label="İptal" @click="showScheduleDialog = false" outlined severity="secondary" />
+        <Button label="Kaydet" @click="saveSchedule" />
+      </template>
+    </Dialog>
   </div>
 </template>
 

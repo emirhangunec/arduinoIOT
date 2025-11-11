@@ -30,7 +30,7 @@ onMounted(() => {
   <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
     <div class="max-w-4xl w-full">
       <div class="text-center mb-12">
-        <h1 class="text-5xl font-bold text-gray-800 mb-4">IoT Building Management Demo</h1>
+        <h1 class="text-5xl font-bold text-gray-800 mb-4">Akıllı Bina Yönetim Sistemi</h1>
         <p class="text-xl text-gray-600">20 Katlı Bina Simülasyonu</p>
       </div>
 
@@ -95,7 +95,7 @@ onMounted(() => {
       </div>
 
       <div class="mt-8 text-center text-gray-500 text-sm">
-        <p>Demo modu - Gerçek zamanlı IoT simülasyonu</p>
+        <p>Gerçek zamanlı IoT yönetim sistemi</p>
       </div>
     </div>
   </div>

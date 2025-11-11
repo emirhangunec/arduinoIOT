@@ -281,7 +281,7 @@ onUnmounted(() => {
       <div class="bg-white rounded-lg shadow-md p-6 mb-6">
         <div class="flex items-center justify-between">
           <div>
-            <h1 class="text-3xl font-bold text-gray-800 mb-2">Simülasyon Cihazı</h1>
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Akıllı Bina Yönetim Sistemi - Simülasyon</h1>
             <p class="text-gray-600" v-if="selectedRoom">
               {{ selectedRoom.name }} - Kat {{ selectedRoom.floor }}, Oda {{ selectedRoom.doorNumber }}
             </p>
@@ -308,6 +308,108 @@ onUnmounted(() => {
               @click="navigateTo('/')"
               outlined
             />
+          </div>
+        </div>
+      </div>
+
+      <!-- 3D Room Visualization -->
+      <div v-if="selectedRoom" class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">Oda Görünümü</h2>
+        <div class="relative bg-gradient-to-b from-blue-100 to-gray-100 rounded-lg p-8 min-h-[400px] overflow-hidden">
+          <!-- Room Background -->
+          <div class="absolute inset-0 bg-gradient-to-br from-sky-200 via-blue-50 to-gray-100"></div>
+          
+          <!-- Window -->
+          <div class="absolute top-4 right-4 w-32 h-48 bg-gray-300 rounded-lg border-4 border-gray-400 shadow-lg" 
+               :class="windowStatus ? 'bg-gray-800' : 'bg-sky-300'">
+            <div class="absolute inset-0 flex items-center justify-center">
+              <div v-if="windowStatus" class="text-white text-xs font-bold">KAPALI</div>
+              <div v-else class="text-blue-800 text-xs font-bold">AÇIK</div>
+            </div>
+            <!-- Window frame -->
+            <div class="absolute inset-2 border-2 border-gray-500"></div>
+          </div>
+          
+          <!-- Light Bulb (ceiling) -->
+          <div class="absolute top-8 left-1/2 transform -translate-x-1/2">
+            <div class="relative">
+              <!-- Light cord -->
+              <div class="w-1 h-16 bg-gray-600 mx-auto"></div>
+              <!-- Bulb -->
+              <div 
+                class="w-16 h-16 rounded-full border-4 border-gray-400 transition-all duration-300"
+                :class="lightStatus ? 'bg-yellow-300 shadow-[0_0_30px_20px_rgba(255,255,0,0.6)]' : 'bg-gray-200'"
+              >
+                <div v-if="lightStatus" class="absolute inset-0 flex items-center justify-center">
+                  <svg class="w-8 h-8 text-yellow-600" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.87-3.13-7-7-7zm0 14h-1v-1h2v1zm0-4h-1v-1h2v1zm0-4h-1V7h2v1z"/>
+                  </svg>
+                </div>
+                <div v-else class="absolute inset-0 flex items-center justify-center">
+                  <svg class="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.87-3.13-7-7-7zm0 14h-1v-1h2v1zm0-4h-1v-1h2v1zm0-4h-1V7h2v1z"/>
+                  </svg>
+                </div>
+              </div>
+              <!-- Light rays when on -->
+              <div v-if="lightStatus" class="absolute top-full left-1/2 transform -translate-x-1/2 w-32 h-32">
+                <div class="absolute inset-0 rounded-full" style="background: radial-gradient(circle, rgba(255,255,0,0.3) 0%, rgba(255,255,0,0.1) 50%, transparent 100%);"></div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Heater (bottom left) -->
+          <div class="absolute bottom-8 left-8">
+            <div class="relative">
+              <div 
+                class="w-24 h-16 bg-gray-700 rounded-lg border-2 border-gray-800 shadow-lg transition-all duration-300"
+                :class="heatingStatus ? 'bg-red-600 shadow-[0_0_20px_10px_rgba(239,68,68,0.5)]' : ''"
+              >
+                <div class="absolute inset-0 flex items-center justify-center">
+                  <div v-if="heatingStatus" class="text-white text-xs font-bold">ISITMA AÇIK</div>
+                  <div v-else class="text-gray-400 text-xs">KAPALI</div>
+                </div>
+                <!-- Heat waves when on -->
+                <div v-if="heatingStatus" class="absolute -top-2 left-1/2 transform -translate-x-1/2">
+                  <div class="w-2 h-2 bg-red-400 rounded-full animate-ping"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Electricity indicator (bottom right) -->
+          <div class="absolute bottom-8 right-8">
+            <div class="relative">
+              <div 
+                class="w-20 h-20 rounded-full border-4 transition-all duration-300 flex items-center justify-center"
+                :class="electricityStatus ? 'bg-yellow-400 border-yellow-600 shadow-[0_0_25px_15px_rgba(234,179,8,0.6)]' : 'bg-gray-300 border-gray-500'"
+              >
+                <svg 
+                  class="w-12 h-12 transition-all duration-300"
+                  :class="electricityStatus ? 'text-yellow-800 animate-pulse' : 'text-gray-500'"
+                  fill="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Temperature Display (center) -->
+          <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+            <div class="bg-white/90 backdrop-blur-sm rounded-lg p-4 shadow-xl border-2 border-blue-300">
+              <div class="text-center">
+                <div class="text-4xl font-bold text-blue-600 mb-1">{{ temperature.toFixed(1) }}°C</div>
+                <div class="text-sm text-gray-600">Sıcaklık</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Room Info Overlay -->
+          <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg">
+            <div class="text-sm font-semibold text-gray-800">{{ selectedRoom.name }}</div>
+            <div class="text-xs text-gray-600">Kat {{ selectedRoom.floor }} - Oda {{ selectedRoom.doorNumber }}</div>
           </div>
         </div>
       </div>

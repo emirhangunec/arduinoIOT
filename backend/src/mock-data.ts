@@ -84,6 +84,15 @@ export function getDeviceById(id: string): MockDevice | null {
     return devices.get(id) || null;
 }
 
+export function getDeviceStatus(id: string): {electricityStatus?: boolean; heatingStatus?: boolean} | null {
+    const device = devices.get(id);
+    if (!device) return null;
+    return {
+        electricityStatus: device.electricityStatus,
+        heatingStatus: device.heatingStatus
+    };
+}
+
 export function updateDeviceStatus(id: string, updates: Partial<MockDevice>): MockDevice | null {
     const device = devices.get(id);
     if (!device) return null;
@@ -164,5 +173,29 @@ export function getOnlineDevices(): DeviceWithRoomAndOpenHours[] {
     });
     
     return onlineDevices;
+}
+
+export function updateRoomOpenHours(roomId: string, openHours: Array<{
+    dayOfWeek: number;
+    openHour: string;
+    closeHour: string;
+    isElectricityOn: boolean;
+    isHeaterOn: boolean;
+}>): boolean {
+    const room = rooms.get(roomId);
+    if (!room) return false;
+    
+    // Convert to OpenHour format
+    room.openHours = openHours.map(oh => ({
+        id: `oh-${roomId}-${oh.dayOfWeek}-${Date.now()}`,
+        dayOfWeek: oh.dayOfWeek,
+        openHour: oh.openHour,
+        closeHour: oh.closeHour,
+        isElectricityOn: oh.isElectricityOn,
+        isHeaterOn: oh.isHeaterOn,
+        roomId: roomId
+    }));
+    
+    return true;
 }
 
